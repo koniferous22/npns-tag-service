@@ -1,0 +1,65 @@
+{
+  "name": "tag-service",
+  "version": "1.0.0",
+  "description": "Tag Service for NPNS project",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/koniferous22/npns-tag-service.git"
+  },
+  "keywords": [
+    "Apollo",
+    "Federation",
+    "NPNS",
+    "Typescript",
+    "TypeGraphQL"
+  ],
+  "author": "koniferous22",
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/koniferous22/npns-tag-service/issues"
+  },
+  "homepage": "https://github.com/koniferous22/npns-tag-service#readme",
+  "dependencies": {
+    "@apollo/federation": "^0.21.0",
+    "apollo-server": "^2.21.0",
+    "class-transformer": "^0.4.0",
+    "class-validator": "^0.13.1",
+    "graphql": "^15.5.0",
+    "graphql-tag": "^2.11.0",
+    "pg": "^8.5.1",
+    "reflect-metadata": "^0.1.13",
+    "type-graphql": "^1.1.1",
+    "typeorm": "^0.2.31",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "@types/node": "^14.14.29",
+    "@types/uuid": "^8.3.0",
+    "@typescript-eslint/eslint-plugin": "^4.15.1",
+    "@typescript-eslint/parser": "^4.15.1",
+    "eslint": "^7.20.0",
+    "eslint-config-prettier": "^7.2.0",
+    "eslint-plugin-graphql": "^4.0.0",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-prettier": "^3.3.1",
+    "husky": "^5.0.9",
+    "lint-staged": "^10.5.4",
+    "prettier": "^2.2.1",
+    "ts-node-dev": "^1.1.1",
+    "tsc": "^1.20150623.0",
+    "typescript": "^4.1.5"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.ts": "eslint --cache --fix",
+    "*.graphql": "graphql-schema-linter ./*.graphql"
+  }
+}
