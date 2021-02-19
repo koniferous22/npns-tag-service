@@ -9,7 +9,7 @@ RUN npm install
 
 # VERSION 1 of the image: npm start:dev
 FROM base_node_alpine AS npns_production
-ENV GATEWAY_START_COMMAND=start
+ENV TAG_SERVICE_START_COMMAND=start
 # Source code is copied and built in this image
 COPY . /usr/src/tag-service
 RUN npm run build
@@ -18,10 +18,10 @@ RUN npm run build
 FROM base_node_alpine AS npns_development
 # Dev image will rely on bind mount to watch for file changes
 # See top level [docker-compose.yml](https://github.com/koniferous22/npns/blob/master/docker-compose.yml)
-ENV GATEWAY_START_COMMAND=start:dev
+ENV TAG_SERVICE_START_COMMAND=start:dev
 
 FROM npns_${NODE_ENV} AS npns_img_final
 EXPOSE 4000
 # Workaround for injecting starting command via env
 # Wait for databases here
-CMD  ["sh", "-c", "npm run ${GATEWAY_START_COMMAND}"]
+CMD  ["sh", "-c", "npm run ${TAG_SERVICE_START_COMMAND}"]
