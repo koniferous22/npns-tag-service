@@ -11,7 +11,11 @@ const bootstrap = async () => {
   await createConnections();
 
   // TODO port config to docker compose
-  const port = 4000;
+  // TODO if more config opts needed define config object with validation
+  const port = parseInt(process.env.TAG_SERVICE_PORT ?? '', 10);
+  if (Number.isNaN(port)) {
+    throw new Error(`Invalid port from config 'TAG_SERVICE_PORT': ${process.env.TAG_SERVICE_PORT}`);
+  }
   const typeGraphQLSchema = await buildSchema({
     resolvers: [TagResolver],
     skipCheck: true
