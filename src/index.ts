@@ -11,6 +11,7 @@ const bootstrap = async () => {
   await createConnections();
 
   const port = parseInt(process.env.PORT ?? '', 10);
+  // Make config file similar to gateway if necessary
   if (Number.isNaN(port)) {
     throw new Error(
       `Invalid port from config 'TAG_SERVICE_PORT': ${process.env.TAG_SERVICE_PORT}`

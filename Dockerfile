@@ -1,3 +1,4 @@
+# Copypasted from gateway base image
 ARG IMAGE_TAG_TAG_SERVICE_ALPINE
 ARG NODE_ENV
 FROM node:$IMAGE_TAG_TAG_SERVICE_ALPINE AS base_node_alpine
