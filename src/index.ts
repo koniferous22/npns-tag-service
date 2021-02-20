@@ -10,8 +10,6 @@ import { TagResolver } from './resolvers/Tag';
 const bootstrap = async () => {
   await createConnections();
 
-  // TODO port config to docker compose
-  // TODO if more config opts needed define config object with validation
   const port = parseInt(process.env.PORT ?? '', 10);
   if (Number.isNaN(port)) {
     throw new Error(

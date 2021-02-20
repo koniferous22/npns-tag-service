@@ -41,7 +41,7 @@ class DeleteTagPayload {
 @Resolver(() => Tag)
 export class TagResolver {
   // TODO not any advantage of using custom decorators
-  private tagRepo = getConnection('tag').getTreeRepository(Tag);
+  private tagRepo = getConnection().getTreeRepository(Tag);
 
   @Query(() => [Tag])
   async tags(@Arg('root', { nullable: true }) root?: string): Promise<Tag[]> {
