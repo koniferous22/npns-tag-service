@@ -23,6 +23,7 @@ const bootstrap = async () => {
   });
   const schema = buildFederatedSchema({
     typeDefs: gql(printSchema(typeGraphQLSchema)),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolvers: createResolversMap(typeGraphQLSchema) as any
   });
   const server = new ApolloServer({

@@ -3,17 +3,17 @@ import {
   Arg,
   Args,
   ArgsType,
+  Ctx,
   Field,
-  FieldResolver,
   ID,
   Mutation,
   ObjectType,
   Query,
   Resolver,
-  Root
 } from 'type-graphql';
 import { getConnection } from 'typeorm';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 } from 'uuid';
+import { TagServiceContext } from '../context';
 import { Tag } from '../entities/Tag';
 
 @ArgsType()
@@ -44,30 +44,38 @@ export class TagResolver {
   private tagRepo = getConnection().getTreeRepository(Tag);
 
   @Query(() => [Tag])
-  async tags(@Arg('root', { nullable: true }) root?: string): Promise<Tag[]> {
+  async tags(
+    @Ctx() ctx: TagServiceContext,
+    @Arg('root', { nullable: true }) root?: string
+  ): Promise<Tag[]> {
+    const tagRepo = ctx.em.getTreeRepository(Tag);
     if (!root) {
-      return this.tagRepo.find();
+      return tagRepo.find();
     }
-    const rootTag = await this.tagRepo.findOne({ name: root });
+    const rootTag = await tagRepo.findOne({ name: root });
     if (!rootTag) {
       throw new Error(`Tag '${root}' not found`);
     }
-    return this.tagRepo.findDescendants(rootTag);
+    return tagRepo.findDescendants(rootTag);
   }
 
   // TODO admin permissions
   @Mutation(() => CreateTagPayload)
-  async createTag(@Args() { name, parentId }: CreateTagArgs) {
-    const parentTag = await this.tagRepo.findOne(parentId);
+  async createTag(
+    @Args() { name, parentId }: CreateTagArgs,
+    @Ctx() ctx: TagServiceContext
+  ) {
+    const tagRepo = ctx.em.getTreeRepository(Tag);
+    const parentTag = await tagRepo.findOne(parentId);
     if (!parentTag) {
       throw new Error(`No parent with id ${parentId} found`);
     }
-    const createdTag = this.tagRepo.create({
-      id: uuidv4(),
+    const createdTag = tagRepo.create({
+      id: v4(),
       name,
       parent: parentTag
     });
-    await this.tagRepo.save(createdTag);
+    await tagRepo.save(createdTag);
     return plainToClass(CreateTagPayload, {
       message: 'Tag created',
       createdTag
@@ -75,26 +83,19 @@ export class TagResolver {
   }
 
   @Mutation(() => DeleteTagPayload)
-  async deleteTag(@Arg('name') name: string) {
-    const tag = await this.tagRepo.findOne({ name });
+  async deleteTag(@Arg('name') name: string, @Ctx() ctx: TagServiceContext) {
+    const tagRepo = ctx.em.getTreeRepository(Tag);
+    const tag = await tagRepo.findOne({ name });
     if (!tag) {
       throw new Error(`No tag '${name}' found`);
     }
-    const tagDescendants = await this.tagRepo.findDescendantsTree(tag);
+    const tagDescendants = await tagRepo.findDescendantsTree(tag);
     if (tagDescendants.children.length > 0) {
       throw new Error(`Cannot delete tag '${name}', delete descendants first`);
     }
-    await this.tagRepo.remove(tag);
+    await tagRepo.remove(tag);
     return plainToClass(DeleteTagPayload, {
       message: `Tag '${name}' deleted`
-    });
-  }
-
-  @FieldResolver()
-  parent(@Root() tag: Tag) {
-    return this.tagRepo.findOne({
-      cache: 1000,
-      where: { id: tag.parent }
     });
   }
 }

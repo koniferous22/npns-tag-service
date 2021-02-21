@@ -8,6 +8,7 @@ import {
   TreeParent,
   TreeChildren
 } from 'typeorm';
+import { v4 } from 'uuid';
 
 @ObjectType()
 @Tree('nested-set')
@@ -22,11 +23,8 @@ export class Tag {
   @Column()
   name!: string;
 
-  @Field(() => Tag, {
-    nullable: true
-  })
   @TreeParent()
-  parent?: Tag;
+  parent!: Tag;
 
   // children is excluded as graphql field,
   // No valid use case for now, even though data is hierarchical, it makes sense to return as adj. list instead
