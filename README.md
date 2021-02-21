@@ -9,4 +9,5 @@ Tag service for npns
 
 ## TODO
 * Model hierarchical data with postgres ltree instead
+* Fix typeorm parent response bug
 * Relay Model with Node interface

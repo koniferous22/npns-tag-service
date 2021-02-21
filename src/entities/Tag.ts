@@ -23,6 +23,7 @@ export class Tag {
   @Column()
   name!: string;
 
+  // TODO include parent eventually couldn't include bc of treeRepository.findDescendants returning entities without this field
   @TreeParent()
   parent!: Tag;
 
