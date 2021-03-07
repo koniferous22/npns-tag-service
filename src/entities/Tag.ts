@@ -1,4 +1,4 @@
-import { Field, ID, ObjectType } from 'type-graphql';
+import { Directive, Field, ID, ObjectType } from 'type-graphql';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -8,8 +8,8 @@ import {
   TreeParent,
   TreeChildren
 } from 'typeorm';
-import { v4 } from 'uuid';
 
+@Directive(`@key(fields: "id")`)
 @ObjectType()
 @Tree('nested-set')
 @Entity()

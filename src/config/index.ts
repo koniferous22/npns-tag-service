@@ -24,8 +24,13 @@ const configWithParser = {
 
 export type ConfigType = ResolveConfigType<typeof configWithParser>;
 
-const resolveConfig: () => ConfigType = () =>
-  resolveConfigEntry(configWithParser);
+const resolveConfig: () => ConfigType = () => {
+  const { config, errors } = resolveConfigEntry(configWithParser);
+  if (errors.length > 0) {
+    throw new Error(errors.join('\n'));
+  }
+  return config;
+};
 
 let config = resolveConfig();
 let settingsChanged = false;
@@ -38,11 +43,9 @@ export const getConfig = () => {
   return config;
 };
 
-// TODO promisify
 export function overrideConfig<KeyString extends string>(
   keyString: KeyString,
   newValue: GetConfigValueByKeyString<KeyString, typeof configWithParser>,
-  cb?: () => void
 ) {
   const keys = keyString.split('.');
   let current: GetObjectValues<ConfigEntryType> = {
