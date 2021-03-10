@@ -9,10 +9,10 @@ import { createConnection } from 'typeorm';
 import { TagResolver } from './resolvers/Tag';
 import { TagServiceContext } from './context';
 import { router } from './routes';
-import { getConfig } from './config';
+import { Config } from './config';
 
 const bootstrap = async () => {
-  const { port, graphqlPath } = getConfig();
+  const { port, graphqlPath } = Config.getInstance().getConfig();
   const connection = await createConnection();
   const em = connection.createEntityManager();
 
@@ -35,7 +35,8 @@ const bootstrap = async () => {
   const server = new ApolloServer({
     schema,
     context: {
-      em
+      em,
+      config: Config.getInstance()
     } as TagServiceContext
   });
   server.setGraphQLPath(graphqlPath);
