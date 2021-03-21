@@ -8,5 +8,5 @@ Tag service for npns
 * `docker-compose exec -- gateway npm run orm -- migration:generate -n <<MIGRATION_NAME>>`
 
 ## TODO
-* Model hierarchical data with postgres ltree instead
+* Authorization (authChecker) for tag management
 * Relay Model with Node interface

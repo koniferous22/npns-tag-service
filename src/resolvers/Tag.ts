@@ -9,9 +9,8 @@ import {
   Mutation,
   ObjectType,
   Query,
-  Resolver,
+  Resolver
 } from 'type-graphql';
-import { getConnection } from 'typeorm';
 import { v4 } from 'uuid';
 import { TagServiceContext } from '../context';
 import { Tag } from '../entities/Tag';
@@ -40,9 +39,6 @@ class DeleteTagPayload {
 
 @Resolver(() => Tag)
 export class TagResolver {
-  // TODO not any advantage of using custom decorators
-  private tagRepo = getConnection().getTreeRepository(Tag);
-
   @Query(() => [Tag])
   async tags(
     @Ctx() ctx: TagServiceContext,

@@ -6,10 +6,12 @@ import {
   Unique,
   Tree,
   TreeParent,
-  TreeChildren
+  TreeChildren,
+  OneToMany
 } from 'typeorm';
+import { Wallet } from './Wallet';
 
-@Directive(`@key(fields: "id")`)
+@Directive(`@key(fields: "name")`)
 @ObjectType()
 @Tree('nested-set')
 @Entity()
@@ -33,4 +35,10 @@ export class Tag {
     cascade: true
   })
   children!: Tag[];
+
+  @OneToMany(() => Wallet, (wallet) => wallet.tag, {
+    lazy: true
+  })
+  @Field(() => [Wallet])
+  scoreboard!: Promise<Wallet[]>;
 }
