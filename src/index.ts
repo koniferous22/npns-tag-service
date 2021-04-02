@@ -66,10 +66,14 @@ const bootstrap = async () => {
 
   const server = new ApolloServer({
     schema,
-    context: {
-      em,
-      config: Config.getInstance()
-    } as TagServiceContext
+    context: ({ req }) => {
+      const userFromRequest = req.headers.user as string;
+      return {
+        em: connection.createEntityManager(),
+        user: userFromRequest ? JSON.parse(userFromRequest) : null,
+        config: Config.getInstance()
+      } as TagServiceContext;
+    }
   });
   server.setGraphQLPath(graphqlPath);
   server.applyMiddleware({ app });
