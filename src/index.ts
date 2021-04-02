@@ -14,6 +14,7 @@ import { TagResolver } from './resolvers/Tag';
 import { TagServiceContext } from './context';
 import { router } from './routes';
 import { Config } from './config';
+import { authChecker } from './authChecker';
 import { resolveWalletReference } from './references/Wallet';
 import { fixFieldSchemaDirectives } from './utils/fixFieldDirectives';
 import { Wallet } from './entities/Wallet';
@@ -36,7 +37,8 @@ const bootstrap = async () => {
   const typeGraphQLSchema = await buildSchema({
     resolvers: [TagResolver],
     directives: [...specifiedDirectives, ...federationDirectives],
-    orphanedTypes: [Wallet]
+    orphanedTypes: [Wallet],
+    authChecker
   });
 
   const schema = buildFederatedSchema({
