@@ -18,7 +18,7 @@ type SanitizeDirectivesConfig = {
   directiveArgs?: Record<string, string | string[] | number | boolean>;
 };
 
-const parseSchemaObjectTypes = (schema: string, test = false) => {
+const parseSchemaObjectTypes = (schema: string) => {
   // TODO generalize directiveArgName
   const wholeTypeRegex = /(?<wholeMatch>type (?<typename>\w+)(?<interfaces>\s*(?<interfaceImpl>implements\s*\w+)+)?(?<directives>\s*@(?<directiveName>\w+)(?<directiveArgs>\s*\(\s*(?<directiveArgName>fields): (?<directiveArg>"\w+")\s*\))?)*\s*\{(?<fields>\s*(?<field>\w+\s*(?<fieldArgs>\(\s*(?<fieldArg>\w+\s*:\s*(?<fieldArgType>\[?\w+!?\]?!?)\s*,\s*)*(?<lastFieldArg>\w+\s*:\s*(?<lastFieldArgType>\[?\w+!?\]?!?)\s*)\))?)\s*:\s*(?<payload>\[?\w+!?\]?!?)\s*)+\})/g;
   const fieldRegex = /(?<field>\w+\s*(?<fieldArgs>\(\s*(?<fieldArg>\w+\s*:\s*(?<fieldArgType>\[?\w+!?\]?!?)\s*,\s*)*(?<lastFieldArg>\w+\s*:\s*(?<lastFieldArgType>\[?\w+!?\]?!?)\s*)\))?)\s*:\s*(?<payload>\[?\w+!?\]?!?)/g;
