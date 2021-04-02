@@ -10,3 +10,4 @@ Tag service for npns
 ## TODO
 * Authorization (authChecker) for tag management
 * Relay Model with Node interface
+* Optimize dockerfile build context
