@@ -14,6 +14,7 @@ import {
 import { v4 } from 'uuid';
 import { TagServiceContext } from '../context';
 import { Tag } from '../entities/Tag';
+import { DeletingTagWithDescendantsError, TagNotFoundError } from '../utils/exceptions';
 
 @ArgsType()
 class CreateTagArgs {
@@ -50,7 +51,7 @@ export class TagResolver {
     }
     const rootTag = await tagRepo.findOne({ name: root });
     if (!rootTag) {
-      throw new Error(`Tag '${root}' not found`);
+      throw new TagNotFoundError(root);
     }
     return tagRepo.findDescendants(rootTag);
   }
@@ -64,7 +65,7 @@ export class TagResolver {
     const tagRepo = ctx.em.getTreeRepository(Tag);
     const parentTag = await tagRepo.findOne(parentId);
     if (!parentTag) {
-      throw new Error(`No parent with id ${parentId} found`);
+      throw new TagNotFoundError(parentId, 'id');
     }
     const createdTag = tagRepo.create({
       id: v4(),
@@ -83,11 +84,11 @@ export class TagResolver {
     const tagRepo = ctx.em.getTreeRepository(Tag);
     const tag = await tagRepo.findOne({ name });
     if (!tag) {
-      throw new Error(`No tag '${name}' found`);
+      throw new TagNotFoundError(name);
     }
     const tagDescendants = await tagRepo.findDescendantsTree(tag);
     if (tagDescendants.children.length > 0) {
-      throw new Error(`Cannot delete tag '${name}', delete descendants first`);
+      throw new DeletingTagWithDescendantsError(name);
     }
     await tagRepo.remove(tag);
     return plainToClass(DeleteTagPayload, {

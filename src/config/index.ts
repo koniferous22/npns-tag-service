@@ -1,4 +1,5 @@
 import path from 'path';
+import { ComposedConfigError, ConfigError } from '../utils/exceptions';
 import {
   resolveConfigNode,
   GetConfigValueByKeyString,
@@ -90,13 +91,6 @@ const configWithParser = {
 export type ResolvedConfigType = ResolveConfigAstNode<typeof configWithParser>;
 
 // TODO exceptions file/dir, as soon as more valid cases here
-export class ConfigError extends Error {
-  name = 'ConfigError';
-  constructor(public errors: string[]) {
-    super(errors.join('\n'));
-  }
-}
-
 export class Config {
   private _value: ResolvedConfigType;
   private _settingsChanged: boolean;
@@ -105,7 +99,7 @@ export class Config {
   private resolveConfig() {
     const { config, errors } = resolveConfigNode(configWithParser);
     if (errors.length > 0) {
-      throw new ConfigError(errors);
+      throw new ComposedConfigError(errors);
     }
     return config;
   }
@@ -141,10 +135,10 @@ export class Config {
           break;
         }
         case 'leaf': {
-          throw new Error(`Key string "${keyString}" out of range`);
+          throw new ConfigError(`Key string "${keyString}" out of range`);
         }
         default: {
-          throw new Error(
+          throw new ConfigError(
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             `Encountered invalid node type: "${current && current!.type}"`
           );
@@ -152,7 +146,7 @@ export class Config {
       }
     });
     if (!['leaf'].includes(current.type)) {
-      throw new Error(
+      throw new ConfigError(
         `Configuration key '${keyString}' references object and not leaf value`
       );
     }

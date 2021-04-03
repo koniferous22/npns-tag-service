@@ -13,4 +13,4 @@ Tag service for npns
 * Authorization (authChecker) for tag management
 * Relay Model with Node interface
 * Optimize dockerfile build context
-
+* Migrate to prisma when it makes sense
