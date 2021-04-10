@@ -1,7 +1,7 @@
 import { getConnection } from 'typeorm';
 import { Config } from './config';
 
-export type TagServiceContext = {
+export type ChallengeServiceContext = {
   em: ReturnType<ReturnType<typeof getConnection>['createEntityManager']>;
   user: {
     data: {

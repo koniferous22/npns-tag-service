@@ -1,9 +1,9 @@
-import { TagServiceContext } from '../context';
+import { ChallengeServiceContext } from '../context';
 import { Tag } from '../entities/Tag';
 
 export const resolveTagReference = (
   tag: Pick<Tag, 'id'>,
-  ctx: TagServiceContext
+  ctx: ChallengeServiceContext
 ) => {
   return ctx.em.getRepository(Tag).findOneOrFail({ id: tag.id });
 };

@@ -11,19 +11,25 @@ import { printSchemaWithDirectives } from '@graphql-tools/utils';
 import { buildSchema, createResolversMap } from 'type-graphql';
 import { createConnection } from 'typeorm';
 import { TagResolver } from './resolvers/Tag';
-import { TagServiceContext } from './context';
+import { ChallengeServiceContext } from './context';
 import { router } from './routes';
 import { Config } from './config';
 import { authChecker } from './authChecker';
 import { resolveWalletReference } from './references/Wallet';
 import { fixFieldSchemaDirectives } from './utils/fixFieldDirectives';
 import { Wallet } from './entities/Wallet';
+import { ChallengeResolver } from './resolvers/Challenge';
 
 const federationFieldDirectivesFixes: Parameters<
   typeof fixFieldSchemaDirectives
 >[1] = [
   {
     objectTypeName: 'Wallet',
+    fieldDefinitionName: 'id',
+    directiveName: 'external'
+  },
+  {
+    objectTypeName: 'User',
     fieldDefinitionName: 'id',
     directiveName: 'external'
   }
@@ -35,7 +41,7 @@ const bootstrap = async () => {
   const em = connection.createEntityManager();
 
   const typeGraphQLSchema = await buildSchema({
-    resolvers: [TagResolver],
+    resolvers: [TagResolver, ChallengeResolver],
     directives: [...specifiedDirectives, ...federationDirectives],
     orphanedTypes: [Wallet],
     authChecker
@@ -74,7 +80,7 @@ const bootstrap = async () => {
         em: connection.createEntityManager(),
         user: userFromRequest ? JSON.parse(userFromRequest) : null,
         config: Config.getInstance()
-      } as TagServiceContext;
+      } as ChallengeServiceContext;
     }
   });
   server.setGraphQLPath(graphqlPath);
@@ -82,7 +88,7 @@ const bootstrap = async () => {
 
   app.listen({ port }, () => {
     console.log(
-      `🚀 Tag service ready at http://localhost:${port}${server.graphqlPath}`
+      `🚀 Challenge service ready at http://localhost:${port}${server.graphqlPath}`
     );
   });
 };

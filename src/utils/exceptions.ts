@@ -54,3 +54,10 @@ export class DeletingTagWithDescendantsError extends Error {
     super(`Cannot delete tag '${tagName}', delete descendants first`);
   }
 }
+
+export class ContentRefNotFound extends Error {
+  name = 'ContentRefNotFound';
+  constructor(entityName: string, id: string, contentId: string) {
+    super(`Content "${contentId}" not found at ${entityName} "${id}"`);
+  }
+}

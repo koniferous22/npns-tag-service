@@ -28,44 +28,44 @@ const configWithParser = {
       children: {
         type: {
           type: 'leaf' as const,
-          originalValue: process.env.TAG_DB_TYPE,
+          originalValue: process.env.CHALLENGE_DB_TYPE,
           transform: getEnum(['postgres']),
           overridenValue: null as null | string
         },
         host: {
           type: 'leaf' as const,
-          originalValue: process.env.TAG_DB_HOST,
+          originalValue: process.env.CHALLENGE_DB_HOST,
           overridenValue: null as null | string
         },
         port: {
           type: 'leaf' as const,
-          originalValue: process.env.TAG_DB_PORT,
+          originalValue: process.env.CHALLENGE_DB_PORT,
           transform: getNumber,
           overridenValue: null as null | string
         },
         username: {
           type: 'leaf' as const,
-          originalValue: process.env.TAG_DB_USERNAME,
+          originalValue: process.env.CHALLENGE_DB_USERNAME,
           overridenValue: null as null | string
         },
         password: {
           type: 'leaf' as const,
-          originalValue: process.env.TAG_DB_PASSWORD,
+          originalValue: process.env.CHALLENGE_DB_PASSWORD,
           overridenValue: null as null | string
         },
         database: {
           type: 'leaf' as const,
-          originalValue: process.env.TAG_DB_DATABASE,
+          originalValue: process.env.CHALLENGE_DB_DATABASE,
           overridenValue: null as null | string
         },
         migrations: {
           type: 'leaf' as const,
-          originalValue: [path.join(__dirname, 'src/migrations/**/*.ts')],
+          originalValue: [path.join(__dirname, '../migrations/**/*.ts')],
           overridenValue: null as null | string
         },
         entities: {
           type: 'leaf' as const,
-          originalValue: [path.join(__dirname, 'src/migrations/**/*.ts')],
+          originalValue: [path.join(__dirname, '../entities/**/*.ts')],
           overridenValue: null as null | string
         },
         cli: {
@@ -79,6 +79,76 @@ const configWithParser = {
             entitiesDir: {
               type: 'leaf' as const,
               originalValue: 'src/entities',
+              overridenValue: null as null | string
+            }
+          }
+        }
+      }
+    },
+    content: {
+      type: 'node' as const,
+      children: {
+        mongoose: {
+          type: 'node' as const,
+          children: {
+            host: {
+              type: 'leaf' as const,
+              originalValue: process.env.CONTENT_DB_HOST,
+              overridenValue: null as null | string
+            },
+            port: {
+              type: 'leaf' as const,
+              originalValue: process.env.CONTENT_DB_PORT,
+              transform: getNumber,
+              overridenValue: null as null | string
+            },
+            username: {
+              type: 'leaf' as const,
+              originalValue: process.env.CONTENT_DB_USERNAME,
+              overridenValue: null as null | string
+            },
+            password: {
+              type: 'leaf' as const,
+              originalValue: process.env.CONTENT_DB_PASSWORD,
+              overridenValue: null as null | string
+            },
+            database: {
+              type: 'leaf' as const,
+              originalValue: process.env.CONTENT_DB_DATABASE,
+              overridenValue: null as null | string
+            }
+          }
+        },
+        gridFs: {
+          type: 'node' as const,
+          children: {
+            maxFiles: {
+              type: 'leaf' as const,
+              originalValue: process.env.GRID_FS_MAX_FILES,
+              transform: getNumber,
+              overridenValue: null as null | string
+            },
+            maxFileSize: {
+              type: 'leaf' as const,
+              originalValue: process.env.GRID_FS_MAX_FILE_SIZE,
+              transform: getNumber,
+              overridenValue: null as null | string
+            }
+          }
+        },
+        limits: {
+          type: 'node' as const,
+          children: {
+            contentUploads: {
+              type: 'leaf' as const,
+              originalValue: process.env.LIMIT_CONTENT_UPLOADS,
+              transform: getNumber,
+              overridenValue: null as null | string
+            },
+            editCount: {
+              type: 'leaf' as const,
+              originalValue: process.env.LIMIT_EDIT_COUNT,
+              transform: getNumber,
               overridenValue: null as null | string
             }
           }

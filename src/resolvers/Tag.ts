@@ -5,16 +5,25 @@ import {
   ArgsType,
   Ctx,
   Field,
+  FieldResolver,
   ID,
   Mutation,
   ObjectType,
   Query,
-  Resolver
+  Resolver,
+  Root
 } from 'type-graphql';
 import { v4 } from 'uuid';
-import { TagServiceContext } from '../context';
+import { ChallengeServiceContext } from '../context';
 import { Tag } from '../entities/Tag';
-import { DeletingTagWithDescendantsError, TagNotFoundError } from '../utils/exceptions';
+import {
+  DeletingTagWithDescendantsError,
+  TagNotFoundError
+} from '../utils/exceptions';
+import {
+  ChallengeConnection,
+  ChallengesByTagIdInput
+} from './ChallengeConnection';
 
 @ArgsType()
 class CreateTagArgs {
@@ -42,7 +51,7 @@ class DeleteTagPayload {
 export class TagResolver {
   @Query(() => [Tag])
   async tags(
-    @Ctx() ctx: TagServiceContext,
+    @Ctx() ctx: ChallengeServiceContext,
     @Arg('root', { nullable: true }) root?: string
   ): Promise<Tag[]> {
     const tagRepo = ctx.em.getTreeRepository(Tag);
@@ -60,7 +69,7 @@ export class TagResolver {
   @Mutation(() => CreateTagPayload)
   async createTag(
     @Args() { name, parentId }: CreateTagArgs,
-    @Ctx() ctx: TagServiceContext
+    @Ctx() ctx: ChallengeServiceContext
   ) {
     const tagRepo = ctx.em.getTreeRepository(Tag);
     const parentTag = await tagRepo.findOne(parentId);
@@ -80,7 +89,10 @@ export class TagResolver {
   }
 
   @Mutation(() => DeleteTagPayload)
-  async deleteTag(@Arg('name') name: string, @Ctx() ctx: TagServiceContext) {
+  async deleteTag(
+    @Arg('name') name: string,
+    @Ctx() ctx: ChallengeServiceContext
+  ) {
     const tagRepo = ctx.em.getTreeRepository(Tag);
     const tag = await tagRepo.findOne({ name });
     if (!tag) {
@@ -94,5 +106,20 @@ export class TagResolver {
     return plainToClass(DeleteTagPayload, {
       message: `Tag '${name}' deleted`
     });
+  }
+
+  @FieldResolver(() => ChallengeConnection)
+  challenges(
+    @Root() tag: Tag,
+    @Arg('input') input: ChallengesByTagIdInput,
+    @Ctx() ctx: ChallengeServiceContext
+  ) {
+    return ChallengeConnection.challengeConnection(
+      {
+        ...input,
+        tags: [tag.id]
+      },
+      ctx
+    );
   }
 }

@@ -9,6 +9,7 @@ import {
   TreeChildren,
   OneToMany
 } from 'typeorm';
+import { Challenge } from './Challenge';
 import { Wallet } from './Wallet';
 
 @Directive(`@key(fields: "name")`)
@@ -36,9 +37,15 @@ export class Tag {
   })
   children!: Tag[];
 
+  // TODO refactor into connection
   @OneToMany(() => Wallet, (wallet) => wallet.tag, {
     lazy: true
   })
   @Field(() => [Wallet])
   scoreboard!: Promise<Wallet[]>;
+
+  @OneToMany(() => Challenge, (challenge) => challenge.tag, {
+    lazy: true
+  })
+  challenges!: Promise<Challenge[]>;
 }
