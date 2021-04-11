@@ -1,5 +1,9 @@
 import { InterfaceType, Field, ObjectType } from 'type-graphql';
-import { LatexContent, MarkdownContent } from '../entities/Content';
+import {
+  LatexContent,
+  MarkdownContent,
+  UploadedContent
+} from '../entities/Content';
 
 @InterfaceType()
 export abstract class BasePayload {
@@ -21,6 +25,14 @@ export class AddLatexContentPayload {
 
   @Field()
   content!: LatexContent;
+}
+
+@ObjectType({ implements: BasePayload })
+export class AddUploadedContentPayload {
+  message!: string;
+
+  @Field()
+  content!: UploadedContent;
 }
 
 @ObjectType({ implements: BasePayload })

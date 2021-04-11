@@ -88,7 +88,7 @@ const configWithParser = {
     content: {
       type: 'node' as const,
       children: {
-        mongoose: {
+        mongo: {
           type: 'node' as const,
           children: {
             host: {

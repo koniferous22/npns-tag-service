@@ -6,7 +6,6 @@ import { User } from './User';
 
 @ObjectType({ isAbstract: true })
 export abstract class AbstractPost {
-
   @Field(() => ID)
   @PrimaryGeneratedColumn('uuid')
   id!: string;

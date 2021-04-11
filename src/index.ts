@@ -10,6 +10,7 @@ import gql from 'graphql-tag';
 import { printSchemaWithDirectives } from '@graphql-tools/utils';
 import { buildSchema, createResolversMap } from 'type-graphql';
 import { createConnection } from 'typeorm';
+import { graphqlUploadExpress } from 'graphql-upload';
 import { TagResolver } from './resolvers/Tag';
 import { ChallengeServiceContext } from './context';
 import { router } from './routes';
@@ -21,6 +22,8 @@ import { Wallet } from './entities/Wallet';
 import { ChallengeResolver } from './resolvers/Challenge';
 import { BaseContentResolver } from './resolvers/BaseContent';
 import { ChallengeEditResolver } from './resolvers/ChallengeEdit';
+import { gridFsConnectMongodb } from './utils/gridFsConnection';
+import { GridFS } from './external/GridFS';
 
 const federationFieldDirectivesFixes: Parameters<
   typeof fixFieldSchemaDirectives
@@ -38,9 +41,11 @@ const federationFieldDirectivesFixes: Parameters<
 ];
 
 const bootstrap = async () => {
-  const { port, graphqlPath } = Config.getInstance().getConfig();
+  const { port, graphqlPath, content } = Config.getInstance().getConfig();
   const connection = await createConnection();
   const em = connection.createEntityManager();
+  const gridFsDb = await gridFsConnectMongodb(content.mongo);
+  const gridFileSystem = new GridFS(gridFsDb);
 
   const typeGraphQLSchema = await buildSchema({
     resolvers: [
@@ -78,6 +83,7 @@ const bootstrap = async () => {
     next();
   });
   app.use(router);
+  app.use(graphqlUploadExpress(content.gridFs));
 
   const server = new ApolloServer({
     schema,
@@ -86,7 +92,8 @@ const bootstrap = async () => {
       return {
         em: connection.createEntityManager(),
         user: userFromRequest ? JSON.parse(userFromRequest) : null,
-        config: Config.getInstance()
+        config: Config.getInstance(),
+        gridFileSystem
       } as ChallengeServiceContext;
     }
   });

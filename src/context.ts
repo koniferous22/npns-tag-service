@@ -1,5 +1,6 @@
 import { getConnection } from 'typeorm';
 import { Config } from './config';
+import { GridFS } from './external/GridFS';
 
 export type ChallengeServiceContext = {
   em: ReturnType<ReturnType<typeof getConnection>['createEntityManager']>;
@@ -15,4 +16,5 @@ export type ChallengeServiceContext = {
     };
   } | null;
   config: Config;
+  gridFileSystem: GridFS;
 };

@@ -14,12 +14,14 @@ import {
   Resolver
 } from 'type-graphql';
 import { Repository } from 'typeorm';
+import { FileUpload, GraphQLUpload } from 'graphql-upload';
 import { ChallengeServiceContext } from '../context';
 import { AbstractPost } from '../entities/AbstractPost';
 import {
   BaseContent,
   LatexContent,
-  MarkdownContent
+  MarkdownContent,
+  UploadedContent
 } from '../entities/Content';
 import { getMaxUploads } from '../utils/contentLimits';
 import {
@@ -30,6 +32,7 @@ import {
 import {
   AddLatexContentPayload,
   AddMarkdownContentPayload,
+  AddUploadedContentPayload,
   PublishPayload,
   RemoveContentPayload
 } from '../utils/payloads';
@@ -58,6 +61,15 @@ export function createAbstractPostResolver<PostT extends AbstractPost>(
 
     @Field()
     latex!: string;
+  }
+
+  @InputType(`AddUploadedContentTo${entityName}Input`)
+  class AddUploadedContentInput {
+    @Field(() => ID)
+    id!: string;
+
+    @Field(() => GraphQLUpload)
+    upload!: Promise<FileUpload>;
   }
 
   @InputType(`RemoveContentFrom${entityName}Input`)
@@ -136,7 +148,7 @@ export function createAbstractPostResolver<PostT extends AbstractPost>(
       );
       // NOTE only subclassed entitites are ofc assumed
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      this.getRepository(ctx).save(post as any);
+      await this.getRepository(ctx).save(post as any);
       return plainToClass(AddMarkdownContentPayload, {
         message: `Markdown content uploaded for ${entityName.toLowerCase()} "${
           input.id
@@ -168,7 +180,7 @@ export function createAbstractPostResolver<PostT extends AbstractPost>(
       }
       // NOTE only subclassed entitites are ofc assumed
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      this.getRepository(ctx).save(post as any);
+      await this.getRepository(ctx).save(post as any);
       return plainToClass(AddLatexContentPayload, {
         message: `Latex content uploaded for ${entityName.toLowerCase()} "${
           input.id
@@ -177,7 +189,42 @@ export function createAbstractPostResolver<PostT extends AbstractPost>(
       });
     }
 
-    // TODO file upload
+    @Authorized()
+    @Mutation(() => AddUploadedContentPayload, {
+      name: `addUploadedContentTo${entityName}`
+    })
+    async addUploadedContent(
+      @Arg('input') input: AddUploadedContentInput,
+      @Ctx() ctx: ChallengeServiceContext
+    ) {
+      const post = await this.getRecordAsOwner(input.id, ctx);
+      const fileUpload = await input.upload;
+      const uploadedContent = new UploadedContent();
+      uploadedContent.mimetype = fileUpload.mimetype;
+      uploadedContent.filename = fileUpload.filename;
+      post.content.push(
+        (classToPlain(uploadedContent) as unknown) as BaseContent
+      );
+      // class-validator didn't work on config-dependant setting
+      if (post.content.length >= getMaxUploads()) {
+        throw new MaxContentPiecesExceededError(
+          'latex',
+          entityName,
+          input.id,
+          getMaxUploads()
+        );
+      }
+      await ctx.gridFileSystem.fileUpload(fileUpload);
+      // NOTE only subclassed entitites are ofc assumed
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await this.getRepository(ctx).save(post as any);
+      return plainToClass(UploadedContent, {
+        message: `Latex content uploaded for ${entityName.toLowerCase()} "${
+          input.id
+        }"`,
+        content: uploadedContent
+      });
+    }
 
     @Authorized()
     @Mutation(() => RemoveContentPayload, {
@@ -194,7 +241,7 @@ export function createAbstractPostResolver<PostT extends AbstractPost>(
       post.content = post.content.filter(({ id }) => id !== input.contentId);
       // NOTE only subclassed entitites are ofc assumed
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      this.getRepository(ctx).save(post as any);
+      await this.getRepository(ctx).save(post as any);
       return plainToClass(RemoveContentPayload, {
         message: `Content "${input.contentId}" removed from ${entityName} "${post.id}"`
       });
@@ -212,7 +259,7 @@ export function createAbstractPostResolver<PostT extends AbstractPost>(
       post.isActive = true;
       // NOTE only subclassed entitites are ofc assumed
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      this.getRepository(ctx).save(post as any);
+      await this.getRepository(ctx).save(post as any);
       return plainToClass(PublishPayload, {
         message: `${entityName} "${args.id}" published`
       });
