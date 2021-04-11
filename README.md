@@ -13,3 +13,4 @@ Challenge service for npns
 * Optimize dockerfile build context
 * Migrate to prisma when it makes sense
 * Make content type abstraction as soon as it makes sense
+* Content owner decorator

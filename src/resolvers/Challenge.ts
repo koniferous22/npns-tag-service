@@ -13,6 +13,7 @@ import {
 import { ChallengeServiceContext } from '../context';
 import { Challenge } from '../entities/Challenge';
 import { Tag } from '../entities/Tag';
+import { UnauthorizedContentAccessError } from '../utils/exceptions';
 import { PublishPayload } from '../utils/payloads';
 import { createAbstractPostResolver } from './AbstractPostResolver';
 import {
@@ -39,8 +40,18 @@ class PublishChallengeInput {
 @Resolver(() => Challenge)
 export class ChallengeResolver extends ChallengeBaseResolver {
   // NOTE just overridden bc of TS, otherwise not necessary
-  getRecord(id: string, ctx: ChallengeServiceContext) {
-    return ctx.em.getRepository(Challenge).findOneOrFail(id);
+  async getRecordAsOwner(id: string, ctx: ChallengeServiceContext) {
+    const post = await ctx.em.getRepository(Challenge).findOneOrFail(id);
+    // NOTE Authorized decorator assumed
+    if (ctx.user?.data.id !== post.poster.id) {
+      // TODO try to implement this as a Decorator
+      throw new UnauthorizedContentAccessError(
+        'Challenge',
+        post.id,
+        ctx.user?.data.id
+      );
+    }
+    return post;
   }
 
   @Query(() => ChallengeConnection)
@@ -55,7 +66,10 @@ export class ChallengeResolver extends ChallengeBaseResolver {
   @Mutation(() => Challenge, {
     name: 'postChallenge'
   })
-  async post(@Arg('tag') tagId: string, @Ctx() ctx: ChallengeServiceContext) {
+  async post(
+    @Arg('tag', () => ID) tagId: string,
+    @Ctx() ctx: ChallengeServiceContext
+  ) {
     const tag = await ctx.em.getRepository(Tag).findOneOrFail(tagId);
     const challengeRepo = ctx.em.getRepository(Challenge);
     const newChallenge = challengeRepo.create({
@@ -76,7 +90,7 @@ export class ChallengeResolver extends ChallengeBaseResolver {
     @Arg('input') input: PublishChallengeInput,
     @Ctx() ctx: ChallengeServiceContext
   ) {
-    const post = await this.getRecord(input.id, ctx);
+    const post = await this.getRecordAsOwner(input.id, ctx);
     post.isActive = true;
     post.title = input.title;
     // NOTE only subclassed entitites are ofc assumed

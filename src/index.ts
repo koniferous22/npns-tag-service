@@ -20,6 +20,7 @@ import { fixFieldSchemaDirectives } from './utils/fixFieldDirectives';
 import { Wallet } from './entities/Wallet';
 import { ChallengeResolver } from './resolvers/Challenge';
 import { BaseContentResolver } from './resolvers/BaseContent';
+import { ChallengeEditResolver } from './resolvers/ChallengeEdit';
 
 const federationFieldDirectivesFixes: Parameters<
   typeof fixFieldSchemaDirectives
@@ -42,7 +43,12 @@ const bootstrap = async () => {
   const em = connection.createEntityManager();
 
   const typeGraphQLSchema = await buildSchema({
-    resolvers: [TagResolver, BaseContentResolver, ChallengeResolver],
+    resolvers: [
+      TagResolver,
+      BaseContentResolver,
+      ChallengeResolver,
+      ChallengeEditResolver
+    ],
     directives: [...specifiedDirectives, ...federationDirectives],
     orphanedTypes: [Wallet],
     authChecker

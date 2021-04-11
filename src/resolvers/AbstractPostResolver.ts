@@ -14,7 +14,6 @@ import {
   Resolver
 } from 'type-graphql';
 import { Repository } from 'typeorm';
-import { Config } from '../config';
 import { ChallengeServiceContext } from '../context';
 import { AbstractPost } from '../entities/AbstractPost';
 import {
@@ -22,9 +21,11 @@ import {
   LatexContent,
   MarkdownContent
 } from '../entities/Content';
+import { getMaxUploads } from '../utils/contentLimits';
 import {
   ContentRefNotFound,
-  MaxContentPiecesExceededError
+  MaxContentPiecesExceededError,
+  UnauthorizedContentAccessError
 } from '../utils/exceptions';
 import {
   AddLatexContentPayload,
@@ -32,10 +33,6 @@ import {
   PublishPayload,
   RemoveContentPayload
 } from '../utils/payloads';
-
-const getMaxUploads = () => {
-  return Config.getInstance().getConfig().content.limits.contentUploads;
-};
 
 export function createAbstractPostResolver<PostT extends AbstractPost>(
   entityName: string,
@@ -93,6 +90,20 @@ export function createAbstractPostResolver<PostT extends AbstractPost>(
       return this.getRepository(ctx).findOneOrFail(id);
     }
 
+    async getRecordAsOwner(id: string, ctx: ChallengeServiceContext) {
+      const post = await this.getRepository(ctx).findOneOrFail(id);
+      // NOTE Authorized decorator assumed
+      if (ctx.user?.data.id !== post.poster.id) {
+        // TODO try to implement this as a Decorator
+        throw new UnauthorizedContentAccessError(
+          entityName,
+          post.id,
+          ctx.user?.data.id
+        );
+      }
+      return post;
+    }
+
     @Query(() => entityClass, {
       name: `${entityName.toLowerCase()}ById`
     })
@@ -108,7 +119,7 @@ export function createAbstractPostResolver<PostT extends AbstractPost>(
       @Arg('input') input: AddMarkdownContentInput,
       @Ctx() ctx: ChallengeServiceContext
     ) {
-      const post = await this.getRecord(input.id, ctx);
+      const post = await this.getRecordAsOwner(input.id, ctx);
       const markdownContent = new MarkdownContent();
       markdownContent.markdown = input.markdown;
       // class-validator didn't work on config-dependant setting
@@ -142,7 +153,7 @@ export function createAbstractPostResolver<PostT extends AbstractPost>(
       @Arg('input') input: AddLatexContentInput,
       @Ctx() ctx: ChallengeServiceContext
     ) {
-      const post = await this.getRecord(input.id, ctx);
+      const post = await this.getRecordAsOwner(input.id, ctx);
       const latexContent = new LatexContent();
       latexContent.latex = input.latex;
       post.content.push((classToPlain(latexContent) as unknown) as BaseContent);
@@ -176,7 +187,7 @@ export function createAbstractPostResolver<PostT extends AbstractPost>(
       @Arg('input') input: RemoveContentInput,
       @Ctx() ctx: ChallengeServiceContext
     ) {
-      const post = await this.getRecord(input.id, ctx);
+      const post = await this.getRecordAsOwner(input.id, ctx);
       if (!post.content.find(({ id }) => id === input.contentId)) {
         throw new ContentRefNotFound(entityName, post.id, input.contentId);
       }
@@ -197,7 +208,7 @@ export function createAbstractPostResolver<PostT extends AbstractPost>(
       @Args() args: FindPostArgs,
       @Ctx() ctx: ChallengeServiceContext
     ) {
-      const post = await this.getRecord(args.id, ctx);
+      const post = await this.getRecordAsOwner(args.id, ctx);
       post.isActive = true;
       // NOTE only subclassed entitites are ofc assumed
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

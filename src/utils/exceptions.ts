@@ -84,3 +84,10 @@ export class MaxEditsExceededError extends Error {
     super(`Error editing ${entityName} "${id}", max ${count} edits allowed`);
   }
 }
+
+export class UnauthorizedContentAccessError extends Error {
+  name = 'UnauthorizedContentAccessError';
+  constructor(entityName: string, id: string, userId?: string) {
+    super(`${entityName} "${id}", attempted access by user "${userId}"`);
+  }
+}
