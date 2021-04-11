@@ -1,16 +1,11 @@
 import { Field, ID, ObjectType } from 'type-graphql';
-import { Column, PrimaryGeneratedColumn } from 'typeorm';
+import { BeforeUpdate, Column, PrimaryGeneratedColumn } from 'typeorm';
 import { GraphQLBoolean } from 'graphql';
-import { MaxLength } from 'class-validator';
 import { BaseContent, ContentUnionType } from './Content';
 import { User } from './User';
-import { Config } from '../config';
 
 @ObjectType({ isAbstract: true })
 export abstract class AbstractPost {
-  static getMaxUploads() {
-    return Config.getInstance().getConfig().content.limits.contentUploads;
-  }
 
   @Field(() => ID)
   @PrimaryGeneratedColumn('uuid')
@@ -22,7 +17,6 @@ export abstract class AbstractPost {
     nullable: false,
     default: '[]'
   })
-  @MaxLength(AbstractPost.getMaxUploads())
   @Field(() => [ContentUnionType])
   content!: BaseContent[];
 
@@ -33,6 +27,15 @@ export abstract class AbstractPost {
   @Field()
   @Column()
   createdAt: Date = new Date();
+
+  @Field()
+  @Column()
+  updatedAt: Date = new Date();
+
+  @BeforeUpdate()
+  updateTs() {
+    this.updatedAt = new Date();
+  }
 
   @Field(() => GraphQLBoolean)
   @Column({

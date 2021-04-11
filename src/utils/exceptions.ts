@@ -61,3 +61,26 @@ export class ContentRefNotFound extends Error {
     super(`Content "${contentId}" not found at ${entityName} "${id}"`);
   }
 }
+
+type ContentType = 'latex' | 'markdown' | 'upload';
+
+export class MaxContentPiecesExceededError extends Error {
+  name = 'MaxContentPiecesExceededError';
+  constructor(
+    contentType: ContentType,
+    entityName: string,
+    id: string,
+    count: number
+  ) {
+    super(
+      `Error adding ${contentType} content to ${entityName} "${id}", max ${count} entries allowed`
+    );
+  }
+}
+
+export class MaxEditsExceededError extends Error {
+  name = 'MaxEditsExceededError';
+  constructor(entityName: string, id: string, count: number) {
+    super(`Error editing ${entityName} "${id}", max ${count} edits allowed`);
+  }
+}

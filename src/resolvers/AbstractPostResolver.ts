@@ -14,6 +14,7 @@ import {
   Resolver
 } from 'type-graphql';
 import { Repository } from 'typeorm';
+import { Config } from '../config';
 import { ChallengeServiceContext } from '../context';
 import { AbstractPost } from '../entities/AbstractPost';
 import {
@@ -21,7 +22,10 @@ import {
   LatexContent,
   MarkdownContent
 } from '../entities/Content';
-import { ContentRefNotFound } from '../utils/exceptions';
+import {
+  ContentRefNotFound,
+  MaxContentPiecesExceededError
+} from '../utils/exceptions';
 import {
   AddLatexContentPayload,
   AddMarkdownContentPayload,
@@ -29,47 +33,47 @@ import {
   RemoveContentPayload
 } from '../utils/payloads';
 
+const getMaxUploads = () => {
+  return Config.getInstance().getConfig().content.limits.contentUploads;
+};
+
 export function createAbstractPostResolver<PostT extends AbstractPost>(
   entityName: string,
   entityClass: ClassType<AbstractPost>
 ) {
   // * Input types
-  @InputType()
+  @InputType(`AddMarkdownContentTo${entityName}Input`)
   class AddMarkdownContentInput {
-    @Field(() => ID, {
-      name: `${entityName.toLowerCase()}Id`
-    })
+    // NOTE typegraphql bug, renaming Fields breaks the input type, otherwise would be implemented like this
+    // @Field(() => ID, {
+    //   name: `${entityName.toLowerCase()}Id`
+    // })
+    @Field(() => ID)
     id!: string;
 
     @Field()
     markdown!: string;
   }
-  @InputType()
+  @InputType(`AddLatexContentTo${entityName}Input`)
   class AddLatexContentInput {
-    @Field(() => ID, {
-      name: `${entityName.toLowerCase()}Id`
-    })
+    @Field(() => ID)
     id!: string;
 
     @Field()
     latex!: string;
   }
 
-  @InputType()
+  @InputType(`RemoveContentFrom${entityName}Input`)
   class RemoveContentInput {
-    @Field(() => ID, {
-      name: `${entityName.toLowerCase()}Id`
-    })
+    @Field(() => ID)
     id!: string;
 
     @Field(() => ID)
     contentId!: string;
   }
   @ArgsType()
-  class PostArgs {
-    @Field(() => ID, {
-      name: `${entityName.toLowerCase()}Id`
-    })
+  class FindPostArgs {
+    @Field(() => ID)
     id!: string;
   }
 
@@ -92,7 +96,7 @@ export function createAbstractPostResolver<PostT extends AbstractPost>(
     @Query(() => entityClass, {
       name: `${entityName.toLowerCase()}ById`
     })
-    findById(@Args() args: PostArgs, @Ctx() ctx: ChallengeServiceContext) {
+    findById(@Args() args: FindPostArgs, @Ctx() ctx: ChallengeServiceContext) {
       return this.getRecord(args.id, ctx);
     }
 
@@ -107,6 +111,15 @@ export function createAbstractPostResolver<PostT extends AbstractPost>(
       const post = await this.getRecord(input.id, ctx);
       const markdownContent = new MarkdownContent();
       markdownContent.markdown = input.markdown;
+      // class-validator didn't work on config-dependant setting
+      if (post.content.length >= getMaxUploads()) {
+        throw new MaxContentPiecesExceededError(
+          'markdown',
+          entityName,
+          input.id,
+          getMaxUploads()
+        );
+      }
       post.content.push(
         (classToPlain(markdownContent) as unknown) as BaseContent
       );
@@ -133,6 +146,15 @@ export function createAbstractPostResolver<PostT extends AbstractPost>(
       const latexContent = new LatexContent();
       latexContent.latex = input.latex;
       post.content.push((classToPlain(latexContent) as unknown) as BaseContent);
+      // class-validator didn't work on config-dependant setting
+      if (post.content.length >= getMaxUploads()) {
+        throw new MaxContentPiecesExceededError(
+          'latex',
+          entityName,
+          input.id,
+          getMaxUploads()
+        );
+      }
       // NOTE only subclassed entitites are ofc assumed
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       this.getRepository(ctx).save(post as any);
@@ -171,7 +193,10 @@ export function createAbstractPostResolver<PostT extends AbstractPost>(
     @Mutation(() => PublishPayload, {
       name: `publish${entityName}`
     })
-    async publish(@Args() args: PostArgs, @Ctx() ctx: ChallengeServiceContext) {
+    async publish(
+      @Args() args: FindPostArgs,
+      @Ctx() ctx: ChallengeServiceContext
+    ) {
       const post = await this.getRecord(args.id, ctx);
       post.isActive = true;
       // NOTE only subclassed entitites are ofc assumed
