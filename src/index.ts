@@ -24,6 +24,10 @@ import { BaseContentResolver } from './resolvers/BaseContent';
 import { ChallengeEditResolver } from './resolvers/ChallengeEdit';
 import { gridFsConnectMongodb } from './utils/gridFsConnection';
 import { GridFS } from './external/GridFS';
+import { SubmissionResolver } from './resolvers/Submission';
+import { SubmissionEditResolver } from './resolvers/SubmissionEdit';
+import { ReplyResolver } from './resolvers/Reply';
+import { ReplyEditResolver } from './resolvers/ReplyResolver';
 
 const federationFieldDirectivesFixes: Parameters<
   typeof fixFieldSchemaDirectives
@@ -52,7 +56,11 @@ const bootstrap = async () => {
       TagResolver,
       BaseContentResolver,
       ChallengeResolver,
-      ChallengeEditResolver
+      ChallengeEditResolver,
+      SubmissionResolver,
+      SubmissionEditResolver,
+      ReplyResolver,
+      ReplyEditResolver
     ],
     directives: [...specifiedDirectives, ...federationDirectives],
     orphanedTypes: [Wallet],

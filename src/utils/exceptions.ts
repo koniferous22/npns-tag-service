@@ -91,3 +91,12 @@ export class UnauthorizedContentAccessError extends Error {
     super(`${entityName} "${id}", attempted access by user "${userId}"`);
   }
 }
+
+export class SubmittingOnOwnChallenge extends Error {
+  name = 'SubmittingOnOwnChallenge';
+  constructor(userId: string, challengeId: string) {
+    super(
+      `User "${userId}" posting submission on own challenge "${challengeId}"`
+    );
+  }
+}
