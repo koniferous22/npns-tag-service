@@ -1,4 +1,4 @@
-import { Directive, ObjectType, Field, ID } from 'type-graphql';
+import { Directive, ObjectType, Field, ID, Int } from 'type-graphql';
 import { Column, Entity, ManyToOne, PrimaryColumn } from 'typeorm';
 import { Tag } from './Tag';
 
@@ -17,9 +17,12 @@ export class Wallet {
   @Field(() => ID)
   id!: string;
 
-  @Field()
-  @Column()
-  score!: number;
+  @Field(() => Int)
+  @Column({
+    type: 'integer',
+    default: 0
+  })
+  score = 0;
 
   @ManyToOne(() => Tag, {
     lazy: true

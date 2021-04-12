@@ -28,6 +28,7 @@ import { SubmissionResolver } from './resolvers/Submission';
 import { SubmissionEditResolver } from './resolvers/SubmissionEdit';
 import { ReplyResolver } from './resolvers/Reply';
 import { ReplyEditResolver } from './resolvers/ReplyResolver';
+import { WalletResolver } from './resolvers/Wallet';
 
 const federationFieldDirectivesFixes: Parameters<
   typeof fixFieldSchemaDirectives
@@ -60,7 +61,8 @@ const bootstrap = async () => {
       SubmissionResolver,
       SubmissionEditResolver,
       ReplyResolver,
-      ReplyEditResolver
+      ReplyEditResolver,
+      WalletResolver
     ],
     directives: [...specifiedDirectives, ...federationDirectives],
     orphanedTypes: [Wallet],

@@ -32,16 +32,40 @@ export class ConfigError extends Error {
 
 export class ConfigValidationError extends Error {
   name = 'ConfigValidationError';
-  constructor(configPath: string, expectedValue: string, actual: string) {
+  constructor(
+    public configPath: string,
+    public expectedValue: string,
+    public actual: string
+  ) {
     super(
       `Invalid config value for "${configPath}" - expected ${expectedValue}, got "${actual}"`
     );
   }
 }
 
+export class InvalidDigestError extends Error {
+  name = 'InvalidDigestError';
+  constructor(public args: unknown, public digest: string) {
+    super(
+      `Received invalid digest "${digest}" for args ${JSON.stringify(args)}`
+    );
+  }
+}
+
+export class MissingDigestError extends Error {
+  name = 'MissingDigestError';
+  constructor(public args: unknown) {
+    super(`Missing digest for args ${JSON.stringify(args)}`);
+  }
+}
+
+
 export class TagNotFoundError extends Error {
   name = 'TagNotFoundError';
-  constructor(tagName: string, identifierType: 'id' | 'name' = 'name') {
+  constructor(
+    public tagName: string,
+    public identifierType: 'id' | 'name' = 'name'
+  ) {
     super(
       `Tag ${identifierType === 'id' ? 'with id ' : ''}'${tagName}' not found`
     );
@@ -50,14 +74,18 @@ export class TagNotFoundError extends Error {
 
 export class DeletingTagWithDescendantsError extends Error {
   name = 'DeletingTagWithDescendantsError';
-  constructor(tagName: string) {
+  constructor(public tagName: string) {
     super(`Cannot delete tag '${tagName}', delete descendants first`);
   }
 }
 
 export class ContentRefNotFound extends Error {
   name = 'ContentRefNotFound';
-  constructor(entityName: string, id: string, contentId: string) {
+  constructor(
+    public entityName: string,
+    public id: string,
+    public contentId: string
+  ) {
     super(`Content "${contentId}" not found at ${entityName} "${id}"`);
   }
 }
@@ -67,10 +95,10 @@ type ContentType = 'latex' | 'markdown' | 'upload';
 export class MaxContentPiecesExceededError extends Error {
   name = 'MaxContentPiecesExceededError';
   constructor(
-    contentType: ContentType,
-    entityName: string,
-    id: string,
-    count: number
+    public contentType: ContentType,
+    public entityName: string,
+    public id: string,
+    public count: number
   ) {
     super(
       `Error adding ${contentType} content to ${entityName} "${id}", max ${count} entries allowed`
@@ -80,21 +108,29 @@ export class MaxContentPiecesExceededError extends Error {
 
 export class MaxEditsExceededError extends Error {
   name = 'MaxEditsExceededError';
-  constructor(entityName: string, id: string, count: number) {
+  constructor(
+    public entityName: string,
+    public id: string,
+    public count: number
+  ) {
     super(`Error editing ${entityName} "${id}", max ${count} edits allowed`);
   }
 }
 
 export class UnauthorizedContentAccessError extends Error {
   name = 'UnauthorizedContentAccessError';
-  constructor(entityName: string, id: string, userId?: string) {
+  constructor(
+    public entityName: string,
+    public id: string,
+    public userId?: string
+  ) {
     super(`${entityName} "${id}", attempted access by user "${userId}"`);
   }
 }
 
 export class SubmittingOnOwnChallenge extends Error {
   name = 'SubmittingOnOwnChallenge';
-  constructor(userId: string, challengeId: string) {
+  constructor(public userId: string, public challengeId: string) {
     super(
       `User "${userId}" posting submission on own challenge "${challengeId}"`
     );

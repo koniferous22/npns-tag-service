@@ -4,6 +4,7 @@ import {
   MarkdownContent,
   UploadedContent
 } from '../entities/Content';
+import { Wallet } from '../entities/Wallet';
 
 @InterfaceType()
 export abstract class BasePayload {
@@ -42,5 +43,17 @@ export class RemoveContentPayload {
 
 @ObjectType({ implements: BasePayload })
 export class PublishPayload {
+  message!: string;
+}
+
+@ObjectType({ implements: BasePayload })
+export class MwpChallenge_CreateWalletPayload implements BasePayload {
+  message!: string;
+
+  @Field(() => Wallet)
+  createdWallet!: Wallet;
+}
+
+export class MwpChallenge_CreateWalletRollbackPayload implements BasePayload {
   message!: string;
 }
