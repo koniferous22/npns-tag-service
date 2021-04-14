@@ -70,3 +70,16 @@ export class MwpChallenge_BoostChallengePayload implements BasePayload {
 export class MwpChallenge_BoostChallengeRollbackPayload implements BasePayload {
   message!: string;
 }
+
+@ObjectType({ implements: BasePayload })
+export class MwpChallenge_MarkChallengeSolvedPayload implements BasePayload {
+  message!: string;
+
+  @Field(() => Challenge)
+  challenge!: Challenge;
+}
+
+export class MwpChallenge_MarkChallengeSolvedRollbackPayload
+  implements BasePayload {
+  message!: string;
+}

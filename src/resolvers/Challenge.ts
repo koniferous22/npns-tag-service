@@ -17,9 +17,18 @@ import { Challenge } from '../entities/Challenge';
 import { Tag } from '../entities/Tag';
 import { Wallet } from '../entities/Wallet';
 import { MultiWriteProxyHmacGuard } from '../middlewares/MultiWriteProxyHmacGuard';
-import { NegativeBoostError, UnauthorizedContentAccessError } from '../utils/exceptions';
-import { MwpChallenge_BoostChallengeInput } from '../utils/inputs';
-import { MwpChallenge_BoostChallengePayload, MwpChallenge_BoostChallengeRollbackPayload, PublishPayload } from '../utils/payloads';
+import {
+  NegativeBoostError,
+  UnauthorizedContentAccessError
+} from '../utils/exceptions';
+import { MwpChallenge_BoostChallengeInput, MwpChallenge_MarkChallengeSolvedInput } from '../utils/inputs';
+import {
+  MwpChallenge_BoostChallengePayload,
+  MwpChallenge_BoostChallengeRollbackPayload,
+  MwpChallenge_MarkChallengeSolvedPayload,
+  MwpChallenge_MarkChallengeSolvedRollbackPayload,
+  PublishPayload
+} from '../utils/payloads';
 import { createAbstractPostResolver } from './AbstractPostResolver';
 import {
   ChallengeConnection,
@@ -144,6 +153,44 @@ export class ChallengeResolver extends ChallengeBaseResolver {
     await ctx.em.getRepository(Challenge).save(challenge);
     return plainToClass(MwpChallenge_BoostChallengeRollbackPayload, {
       message: `Challenge "${challenge.id}" boosted by ${payload.amount}`
+    });
+  }
+
+  @Directive('@MwpTransaction')
+  @UseMiddleware(MultiWriteProxyHmacGuard)
+  @Authorized()
+  @Mutation(() => MwpChallenge_MarkChallengeSolvedPayload, {
+    name: 'mwpChallenge_MarkChallengeSolved'
+  })
+  async MarkChallengeSolved(
+    @Arg('payload') payload: MwpChallenge_MarkChallengeSolvedInput,
+    @Arg('digest') digest: string,
+    @Ctx() ctx: ChallengeServiceContext
+  ) {
+    const challenge = await this.getRecordAsOwner(payload.challengeId, ctx);
+    challenge.isActive = false;
+    await ctx.em.getRepository(Challenge).save(challenge);
+    return plainToClass(MwpChallenge_MarkChallengeSolvedPayload, {
+      challenge,
+      message: `Challenge "${challenge.id}" marked solved`
+    });
+  }
+  @Directive('@MwpRollback')
+  @UseMiddleware(MultiWriteProxyHmacGuard)
+  @Authorized()
+  @Mutation(() => MwpChallenge_MarkChallengeSolvedPayload, {
+    name: 'mwpChallenge_MarkChallengeSolvedRollback'
+  })
+  async MarkChallengeSolvedRollback(
+    @Arg('payload', () => ID) payload: MwpChallenge_MarkChallengeSolvedInput,
+    @Arg('digest') digest: string,
+    @Ctx() ctx: ChallengeServiceContext
+  ) {
+    const challenge = await this.getRecordAsOwner(payload.challengeId, ctx);
+    challenge.isActive = true;
+    await ctx.em.getRepository(Challenge).save(challenge);
+    return plainToClass(MwpChallenge_MarkChallengeSolvedRollbackPayload, {
+      message: `Challenge "${challenge.id}" solved status reverted`
     });
   }
 }

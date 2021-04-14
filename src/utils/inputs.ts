@@ -17,3 +17,9 @@ export class MwpChallenge_BoostChallengeInput {
   @Field()
   amount!: number;
 }
+
+@InputType()
+export class MwpChallenge_MarkChallengeSolvedInput {
+  @Field(() => ID)
+  challengeId!: string;
+}

@@ -15,3 +15,4 @@ Challenge service for npns
 * Make content type abstraction as soon as it makes sense
 * Content owner decorator
 * Find better workaround for reference resolving
+* Design better challenge lifecycle, shouldn't be determined by single boolean `isActive`
