@@ -29,6 +29,7 @@ import { SubmissionEditResolver } from './resolvers/SubmissionEdit';
 import { ReplyResolver } from './resolvers/Reply';
 import { ReplyEditResolver } from './resolvers/ReplyResolver';
 import { WalletResolver } from './resolvers/Wallet';
+import { resolveTagReference } from './references/Tag';
 
 const federationFieldDirectivesFixes: Parameters<
   typeof fixFieldSchemaDirectives
@@ -84,7 +85,7 @@ const bootstrap = async () => {
       __resolveReference: resolveWalletReference
     },
     Tag: {
-      __resolveReference: resolveWalletReference
+      __resolveReference: resolveTagReference
     }
   });
   const app = express();

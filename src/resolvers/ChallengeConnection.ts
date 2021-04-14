@@ -6,7 +6,6 @@ import {
   IsMongoId,
   IsUUID
 } from 'class-validator';
-import { GraphQLString } from 'graphql';
 import { Field, Float, ID, InputType, Int, ObjectType } from 'type-graphql';
 import { Between, In, LessThanOrEqual, MoreThan } from 'typeorm';
 import { ChallengeServiceContext } from '../context';
@@ -46,7 +45,7 @@ export class ChallengesByTagIdInput {
 
 @InputType()
 export class ChallengesByTagIdsInput extends ChallengesByTagIdInput {
-  @Field(() => [GraphQLString])
+  @Field(() => [ID])
   @IsNotEmpty({
     each: true
   })
@@ -124,13 +123,10 @@ export class ChallengeConnection {
         }
       });
     }
-    console.log(prioritizedChallenges);
     if (
       !input.shouldPrioritizeBoostedChallenges ||
       prioritizedChallenges.length < input.first
     ) {
-      const test = await challengeRepo.find({});
-      console.log(test);
       standardChallenges = await challengeRepo.find({
         where: {
           ...(input.afterCursorViews
