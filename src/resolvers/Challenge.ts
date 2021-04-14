@@ -3,18 +3,23 @@ import {
   Arg,
   Authorized,
   Ctx,
+  Directive,
   Field,
   ID,
   InputType,
   Mutation,
   Query,
-  Resolver
+  Resolver,
+  UseMiddleware
 } from 'type-graphql';
 import { ChallengeServiceContext } from '../context';
 import { Challenge } from '../entities/Challenge';
 import { Tag } from '../entities/Tag';
-import { UnauthorizedContentAccessError } from '../utils/exceptions';
-import { PublishPayload } from '../utils/payloads';
+import { Wallet } from '../entities/Wallet';
+import { MultiWriteProxyHmacGuard } from '../middlewares/MultiWriteProxyHmacGuard';
+import { NegativeBoostError, UnauthorizedContentAccessError } from '../utils/exceptions';
+import { MwpChallenge_BoostChallengeInput } from '../utils/inputs';
+import { MwpChallenge_BoostChallengePayload, MwpChallenge_BoostChallengeRollbackPayload, PublishPayload } from '../utils/payloads';
 import { createAbstractPostResolver } from './AbstractPostResolver';
 import {
   ChallengeConnection,
@@ -98,6 +103,47 @@ export class ChallengeResolver extends ChallengeBaseResolver {
     this.getRepository(ctx).save(post as any);
     return plainToClass(PublishPayload, {
       message: `Challenge "${input.id}" published`
+    });
+  }
+
+  @Directive('@MwpTransaction')
+  @UseMiddleware(MultiWriteProxyHmacGuard)
+  @Authorized()
+  @Mutation(() => MwpChallenge_BoostChallengePayload, {
+    name: 'mwpChallenge_BoostChallenge'
+  })
+  async boostChallenge(
+    @Arg('payload') payload: MwpChallenge_BoostChallengeInput,
+    @Arg('digest') digest: string,
+    @Ctx() ctx: ChallengeServiceContext
+  ) {
+    const challenge = await this.getRecordAsOwner(payload.challengeId, ctx);
+    challenge.boost += payload.amount;
+    await ctx.em.getRepository(Challenge).save(challenge);
+    return plainToClass(MwpChallenge_BoostChallengePayload, {
+      challenge,
+      message: `Challenge "${challenge.id}" boosted by ${payload.amount}`
+    });
+  }
+  @Directive('@MwpRollback')
+  @UseMiddleware(MultiWriteProxyHmacGuard)
+  @Authorized()
+  @Mutation(() => MwpChallenge_BoostChallengePayload, {
+    name: 'mwpChallenge_BoostChallengeRollback'
+  })
+  async boostChallengeRollback(
+    @Arg('payload', () => ID) payload: MwpChallenge_BoostChallengeInput,
+    @Arg('digest') digest: string,
+    @Ctx() ctx: ChallengeServiceContext
+  ) {
+    const challenge = await this.getRecordAsOwner(payload.challengeId, ctx);
+    challenge.boost -= payload.amount;
+    if (challenge.boost < 0) {
+      throw new NegativeBoostError(challenge.id, challenge.boost);
+    }
+    await ctx.em.getRepository(Challenge).save(challenge);
+    return plainToClass(MwpChallenge_BoostChallengeRollbackPayload, {
+      message: `Challenge "${challenge.id}" boosted by ${payload.amount}`
     });
   }
 }

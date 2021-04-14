@@ -59,7 +59,6 @@ export class MissingDigestError extends Error {
   }
 }
 
-
 export class TagNotFoundError extends Error {
   name = 'TagNotFoundError';
   constructor(
@@ -134,5 +133,12 @@ export class SubmittingOnOwnChallenge extends Error {
     super(
       `User "${userId}" posting submission on own challenge "${challengeId}"`
     );
+  }
+}
+
+export class NegativeBoostError extends Error {
+  name = 'NegativeBoostError';
+  constructor(public challengeId: string, public boost: number) {
+    super(`Challenge "${challengeId}" reached negative boost "${boost}"`);
   }
 }
