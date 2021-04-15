@@ -142,3 +142,22 @@ export class NegativeBoostError extends Error {
     super(`Challenge "${challengeId}" reached negative boost "${boost}"`);
   }
 }
+
+export class UpdatingSolvedChallenge extends Error {
+  name = 'UpdatingSolvedChallenge';
+  constructor(
+    public challengeId: string,
+    public operationType: 'boost' | 'mark solved'
+  ) {
+    super(
+      `Attempting to ${operationType} already solved challenge "${challengeId}"`
+    );
+  }
+}
+
+export class UpdatingInactiveChallenge extends Error {
+  name = 'UpdatingInactiveChallenge';
+  constructor(public challengeId: string) {
+    super(`Attempting to update inactive challenge "${challengeId}"`);
+  }
+}

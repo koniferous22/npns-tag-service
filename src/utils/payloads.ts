@@ -43,7 +43,12 @@ export class RemoveContentPayload {
 }
 
 @ObjectType({ implements: BasePayload })
-export class PublishPayload {
+export class MwpChallenge_PublishPayload {
+  message!: string;
+}
+
+@ObjectType({ implements: BasePayload })
+export class MwpChallenge_PublishRollbackPayload {
   message!: string;
 }
 

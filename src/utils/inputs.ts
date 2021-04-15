@@ -22,4 +22,10 @@ export class MwpChallenge_BoostChallengeInput {
 export class MwpChallenge_MarkChallengeSolvedInput {
   @Field(() => ID)
   challengeId!: string;
+
+  @Field(() => ID)
+  submissionId!: string;
+
+  @Field(() => ID)
+  winnerWalletId!: string;
 }

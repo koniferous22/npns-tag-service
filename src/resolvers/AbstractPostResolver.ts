@@ -6,12 +6,14 @@ import {
   Authorized,
   ClassType,
   Ctx,
+  Directive,
   Field,
   ID,
   InputType,
   Mutation,
   Query,
-  Resolver
+  Resolver,
+  UseMiddleware
 } from 'type-graphql';
 import { Repository } from 'typeorm';
 import { FileUpload, GraphQLUpload } from 'graphql-upload';
@@ -33,9 +35,11 @@ import {
   AddLatexContentPayload,
   AddMarkdownContentPayload,
   AddUploadedContentPayload,
-  PublishPayload,
+  MwpChallenge_PublishPayload,
+  MwpChallenge_PublishRollbackPayload,
   RemoveContentPayload
 } from '../utils/payloads';
+import { MultiWriteProxyHmacGuard } from '../middlewares/MultiWriteProxyHmacGuard';
 
 export function createAbstractPostResolver<PostT extends AbstractPost>(
   entityName: string,
@@ -247,21 +251,43 @@ export function createAbstractPostResolver<PostT extends AbstractPost>(
       });
     }
 
+    @Directive('@MwpTransaction')
+    @UseMiddleware(MultiWriteProxyHmacGuard)
     @Authorized()
-    @Mutation(() => PublishPayload, {
-      name: `publish${entityName}`
+    @Mutation(() => MwpChallenge_PublishPayload, {
+      name: `mwpChallenge_publish${entityName}`
     })
     async publish(
-      @Args() args: FindPostArgs,
+      @Arg('payload', () => ID) id: string,
       @Ctx() ctx: ChallengeServiceContext
     ) {
-      const post = await this.getRecordAsOwner(args.id, ctx);
+      const post = await this.getRecordAsOwner(id, ctx);
       post.isActive = true;
       // NOTE only subclassed entitites are ofc assumed
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await this.getRepository(ctx).save(post as any);
-      return plainToClass(PublishPayload, {
-        message: `${entityName} "${args.id}" published`
+      return plainToClass(MwpChallenge_PublishPayload, {
+        message: `${entityName} "${id}" published`
+      });
+    }
+
+    @Directive('@MwpRollback')
+    @UseMiddleware(MultiWriteProxyHmacGuard)
+    @Authorized()
+    @Mutation(() => MwpChallenge_PublishPayload, {
+      name: `mwpChallenge_publish${entityName}`
+    })
+    async publishRollback(
+      @Arg('payload', () => ID) id: string,
+      @Ctx() ctx: ChallengeServiceContext
+    ) {
+      const post = await this.getRecordAsOwner(id, ctx);
+      post.isActive = false;
+      // NOTE only subclassed entitites are ofc assumed
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await this.getRepository(ctx).save(post as any);
+      return plainToClass(MwpChallenge_PublishRollbackPayload, {
+        message: `${entityName} "${id}" publish rolled back`
       });
     }
   }

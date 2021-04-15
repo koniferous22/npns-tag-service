@@ -14,20 +14,27 @@ import {
 } from 'type-graphql';
 import { ChallengeServiceContext } from '../context';
 import { Challenge } from '../entities/Challenge';
+import { Submission } from '../entities/Submission';
 import { Tag } from '../entities/Tag';
 import { Wallet } from '../entities/Wallet';
 import { MultiWriteProxyHmacGuard } from '../middlewares/MultiWriteProxyHmacGuard';
 import {
   NegativeBoostError,
-  UnauthorizedContentAccessError
+  UnauthorizedContentAccessError,
+  UpdatingInactiveChallenge,
+  UpdatingSolvedChallenge
 } from '../utils/exceptions';
-import { MwpChallenge_BoostChallengeInput, MwpChallenge_MarkChallengeSolvedInput } from '../utils/inputs';
+import {
+  MwpChallenge_BoostChallengeInput,
+  MwpChallenge_MarkChallengeSolvedInput
+} from '../utils/inputs';
 import {
   MwpChallenge_BoostChallengePayload,
   MwpChallenge_BoostChallengeRollbackPayload,
   MwpChallenge_MarkChallengeSolvedPayload,
   MwpChallenge_MarkChallengeSolvedRollbackPayload,
-  PublishPayload
+  MwpChallenge_PublishPayload,
+  MwpChallenge_PublishRollbackPayload
 } from '../utils/payloads';
 import { createAbstractPostResolver } from './AbstractPostResolver';
 import {
@@ -41,7 +48,7 @@ const ChallengeBaseResolver = createAbstractPostResolver(
 );
 
 @InputType()
-class PublishChallengeInput {
+class MwpChallenge_PublishChallengeInput {
   @Field(() => ID, {
     name: 'challengeId'
   })
@@ -96,22 +103,41 @@ export class ChallengeResolver extends ChallengeBaseResolver {
     return newChallenge;
   }
 
+  @Directive('@MwpTransaction')
+  @UseMiddleware(MultiWriteProxyHmacGuard)
   @Authorized()
-  @Mutation(() => PublishPayload, {
-    name: `publishChallenge`
+  @Mutation(() => MwpChallenge_PublishPayload, {
+    name: `mwpChallenge_publishChallenge`
   })
-  async publish(
-    @Arg('input') input: PublishChallengeInput,
+  async publish2(
+    @Arg('payload', () => ID) payload: MwpChallenge_PublishChallengeInput,
     @Ctx() ctx: ChallengeServiceContext
   ) {
-    const post = await this.getRecordAsOwner(input.id, ctx);
-    post.isActive = true;
-    post.title = input.title;
-    // NOTE only subclassed entitites are ofc assumed
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    this.getRepository(ctx).save(post as any);
-    return plainToClass(PublishPayload, {
-      message: `Challenge "${input.id}" published`
+    const challenge = await this.getRecordAsOwner(payload.id, ctx);
+    challenge.isActive = true;
+    challenge.title = payload.title;
+    await this.getRepository(ctx).save(challenge);
+    return plainToClass(MwpChallenge_PublishPayload, {
+      message: `Challenge "${payload}" published`
+    });
+  }
+
+  @Directive('@MwpRollback')
+  @UseMiddleware(MultiWriteProxyHmacGuard)
+  @Authorized()
+  @Mutation(() => MwpChallenge_PublishPayload, {
+    name: `mwpChallenge_publishChallenge`
+  })
+  async publishRollback(
+    @Arg('payload', () => ID) id: string,
+    @Ctx() ctx: ChallengeServiceContext
+  ) {
+    const challenge = await this.getRecordAsOwner(id, ctx);
+    challenge.isActive = false;
+    challenge.title = '';
+    await this.getRepository(ctx).save(challenge);
+    return plainToClass(MwpChallenge_PublishRollbackPayload, {
+      message: `Challenge "${id}" publish rolled back`
     });
   }
 
@@ -127,6 +153,12 @@ export class ChallengeResolver extends ChallengeBaseResolver {
     @Ctx() ctx: ChallengeServiceContext
   ) {
     const challenge = await this.getRecordAsOwner(payload.challengeId, ctx);
+    if (challenge.acceptedSubmission) {
+      throw new UpdatingSolvedChallenge(challenge.id, 'boost');
+    }
+    if (!challenge.isActive) {
+      throw new UpdatingInactiveChallenge(challenge.id);
+    }
     challenge.boost += payload.amount;
     await ctx.em.getRepository(Challenge).save(challenge);
     return plainToClass(MwpChallenge_BoostChallengePayload, {
@@ -168,8 +200,29 @@ export class ChallengeResolver extends ChallengeBaseResolver {
     @Ctx() ctx: ChallengeServiceContext
   ) {
     const challenge = await this.getRecordAsOwner(payload.challengeId, ctx);
+    const winnerSubmission = await ctx.em
+      .getRepository(Submission)
+      .findOneOrFail({ id: payload.submissionId, challenge });
+    const walletRepo = ctx.em.getRepository(Wallet);
+    const winnerWallet = await walletRepo.findOneOrFail(payload.winnerWalletId);
+    if (challenge.acceptedSubmission) {
+      throw new UpdatingSolvedChallenge(challenge.id, 'mark solved');
+    }
+    if (!challenge.isActive) {
+      throw new UpdatingInactiveChallenge(challenge.id);
+    }
     challenge.isActive = false;
+    challenge.acceptedSubmission = winnerSubmission;
     await ctx.em.getRepository(Challenge).save(challenge);
+    try {
+      winnerWallet.score += challenge.boost;
+      await walletRepo.save(winnerWallet);
+    } catch (e) {
+      challenge.isActive = true;
+      challenge.acceptedSubmission = null;
+      await ctx.em.getRepository(Challenge).save(challenge);
+      throw e;
+    }
     return plainToClass(MwpChallenge_MarkChallengeSolvedPayload, {
       challenge,
       message: `Challenge "${challenge.id}" marked solved`
@@ -182,7 +235,7 @@ export class ChallengeResolver extends ChallengeBaseResolver {
     name: 'mwpChallenge_MarkChallengeSolvedRollback'
   })
   async MarkChallengeSolvedRollback(
-    @Arg('payload', () => ID) payload: MwpChallenge_MarkChallengeSolvedInput,
+    @Arg('payload') payload: MwpChallenge_MarkChallengeSolvedInput,
     @Arg('digest') digest: string,
     @Ctx() ctx: ChallengeServiceContext
   ) {
