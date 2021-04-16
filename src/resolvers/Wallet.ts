@@ -44,13 +44,13 @@ export class WalletResolver {
     await walletRepo.save(createdWallet);
     return plainToClass(MwpChallenge_CreateWalletPayload, {
       createdWallet,
-      message: `Wallet "${payload}" - scoreboard record created`
+      message: `Wallet "${payload.walletId}" - scoreboard record created`
     });
   }
   @Directive('@MwpRollback')
   @UseMiddleware(MultiWriteProxyHmacGuard)
   @Authorized()
-  @Mutation(() => MwpChallenge_CreateWalletPayload, {
+  @Mutation(() => MwpChallenge_CreateWalletRollbackPayload, {
     name: 'mwpChallenge_CreateWalletRollback'
   })
   async createWalletRollback(

@@ -1,10 +1,10 @@
-import { Field, ID, ObjectType } from 'type-graphql';
+import { Field, ID, InterfaceType } from 'type-graphql';
 import { BeforeUpdate, Column, PrimaryGeneratedColumn } from 'typeorm';
 import { GraphQLBoolean } from 'graphql';
-import { BaseContent, ContentUnionType } from './Content';
+import { Content } from './Content';
 import { User } from './User';
 
-@ObjectType({ isAbstract: true })
+@InterfaceType()
 export abstract class AbstractPost {
   @Field(() => ID)
   @PrimaryGeneratedColumn('uuid')
@@ -16,8 +16,8 @@ export abstract class AbstractPost {
     nullable: false,
     default: '[]'
   })
-  @Field(() => [ContentUnionType])
-  content!: BaseContent[];
+  @Field(() => [Content])
+  content!: Content[];
 
   @Column(() => User)
   @Field(() => User)

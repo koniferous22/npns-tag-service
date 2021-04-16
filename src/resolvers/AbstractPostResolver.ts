@@ -20,7 +20,7 @@ import { FileUpload, GraphQLUpload } from 'graphql-upload';
 import { ChallengeServiceContext } from '../context';
 import { AbstractPost } from '../entities/AbstractPost';
 import {
-  BaseContent,
+  Content,
   LatexContent,
   MarkdownContent,
   UploadedContent
@@ -147,9 +147,7 @@ export function createAbstractPostResolver<PostT extends AbstractPost>(
           getMaxUploads()
         );
       }
-      post.content.push(
-        (classToPlain(markdownContent) as unknown) as BaseContent
-      );
+      post.content.push((classToPlain(markdownContent) as unknown) as Content);
       // NOTE only subclassed entitites are ofc assumed
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await this.getRepository(ctx).save(post as any);
@@ -172,7 +170,7 @@ export function createAbstractPostResolver<PostT extends AbstractPost>(
       const post = await this.getRecordAsOwner(input.id, ctx);
       const latexContent = new LatexContent();
       latexContent.latex = input.latex;
-      post.content.push((classToPlain(latexContent) as unknown) as BaseContent);
+      post.content.push((classToPlain(latexContent) as unknown) as Content);
       // class-validator didn't work on config-dependant setting
       if (post.content.length >= getMaxUploads()) {
         throw new MaxContentPiecesExceededError(
@@ -206,9 +204,7 @@ export function createAbstractPostResolver<PostT extends AbstractPost>(
       const uploadedContent = new UploadedContent();
       uploadedContent.mimetype = fileUpload.mimetype;
       uploadedContent.filename = fileUpload.filename;
-      post.content.push(
-        (classToPlain(uploadedContent) as unknown) as BaseContent
-      );
+      post.content.push((classToPlain(uploadedContent) as unknown) as Content);
       // class-validator didn't work on config-dependant setting
       if (post.content.length >= getMaxUploads()) {
         throw new MaxContentPiecesExceededError(
@@ -255,7 +251,7 @@ export function createAbstractPostResolver<PostT extends AbstractPost>(
     @UseMiddleware(MultiWriteProxyHmacGuard)
     @Authorized()
     @Mutation(() => MwpChallenge_PublishPayload, {
-      name: `mwpChallenge_publish${entityName}`
+      name: `mwpChallenge_Publish${entityName}`
     })
     async publish(
       @Arg('payload', () => ID) id: string,
@@ -267,15 +263,16 @@ export function createAbstractPostResolver<PostT extends AbstractPost>(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await this.getRepository(ctx).save(post as any);
       return plainToClass(MwpChallenge_PublishPayload, {
-        message: `${entityName} "${id}" published`
+        message: `${entityName} "${id}" published`,
+        publishedId: post.id
       });
     }
 
     @Directive('@MwpRollback')
     @UseMiddleware(MultiWriteProxyHmacGuard)
     @Authorized()
-    @Mutation(() => MwpChallenge_PublishPayload, {
-      name: `mwpChallenge_publish${entityName}`
+    @Mutation(() => MwpChallenge_PublishRollbackPayload, {
+      name: `mwpChallenge_Publish${entityName}Rollback`
     })
     async publishRollback(
       @Arg('payload', () => ID) id: string,

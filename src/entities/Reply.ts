@@ -5,7 +5,7 @@ import { ReplyEdit } from './ReplyEdit';
 import { Submission } from './Submission';
 
 @Directive(`@key(fields: "id")`)
-@ObjectType()
+@ObjectType({ implements: AbstractPost })
 @Entity()
 export class Reply extends AbstractPost {
   // TODO shard key

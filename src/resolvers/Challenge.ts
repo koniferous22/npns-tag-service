@@ -107,10 +107,10 @@ export class ChallengeResolver extends ChallengeBaseResolver {
   @UseMiddleware(MultiWriteProxyHmacGuard)
   @Authorized()
   @Mutation(() => MwpChallenge_PublishPayload, {
-    name: `mwpChallenge_publishChallenge`
+    name: `mwpChallenge_PublishChallenge`
   })
   async publish2(
-    @Arg('payload', () => ID) payload: MwpChallenge_PublishChallengeInput,
+    @Arg('payload') payload: MwpChallenge_PublishChallengeInput,
     @Ctx() ctx: ChallengeServiceContext
   ) {
     const challenge = await this.getRecordAsOwner(payload.id, ctx);
@@ -118,15 +118,16 @@ export class ChallengeResolver extends ChallengeBaseResolver {
     challenge.title = payload.title;
     await this.getRepository(ctx).save(challenge);
     return plainToClass(MwpChallenge_PublishPayload, {
-      message: `Challenge "${payload}" published`
+      message: `Challenge "${payload}" published`,
+      publishedId: challenge.id
     });
   }
 
   @Directive('@MwpRollback')
   @UseMiddleware(MultiWriteProxyHmacGuard)
   @Authorized()
-  @Mutation(() => MwpChallenge_PublishPayload, {
-    name: `mwpChallenge_publishChallenge`
+  @Mutation(() => MwpChallenge_PublishRollbackPayload, {
+    name: `mwpChallenge_PublishChallengeRollback`
   })
   async publishRollback(
     @Arg('payload', () => ID) id: string,
@@ -169,11 +170,11 @@ export class ChallengeResolver extends ChallengeBaseResolver {
   @Directive('@MwpRollback')
   @UseMiddleware(MultiWriteProxyHmacGuard)
   @Authorized()
-  @Mutation(() => MwpChallenge_BoostChallengePayload, {
+  @Mutation(() => MwpChallenge_BoostChallengeRollbackPayload, {
     name: 'mwpChallenge_BoostChallengeRollback'
   })
   async boostChallengeRollback(
-    @Arg('payload', () => ID) payload: MwpChallenge_BoostChallengeInput,
+    @Arg('payload') payload: MwpChallenge_BoostChallengeInput,
     @Arg('digest') digest: string,
     @Ctx() ctx: ChallengeServiceContext
   ) {
@@ -231,10 +232,10 @@ export class ChallengeResolver extends ChallengeBaseResolver {
   @Directive('@MwpRollback')
   @UseMiddleware(MultiWriteProxyHmacGuard)
   @Authorized()
-  @Mutation(() => MwpChallenge_MarkChallengeSolvedPayload, {
+  @Mutation(() => MwpChallenge_MarkChallengeSolvedRollbackPayload, {
     name: 'mwpChallenge_MarkChallengeSolvedRollback'
   })
-  async MarkChallengeSolvedRollback(
+  async markChallengeSolvedRollback(
     @Arg('payload') payload: MwpChallenge_MarkChallengeSolvedInput,
     @Arg('digest') digest: string,
     @Ctx() ctx: ChallengeServiceContext

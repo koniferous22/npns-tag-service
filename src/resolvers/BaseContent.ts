@@ -1,11 +1,11 @@
 import { FieldResolver, Resolver, Root } from 'type-graphql';
-import { BaseContent } from '../entities/Content';
+import { Content } from '../entities/Content';
 
 // NOTE bugfix of bad date serializing
-@Resolver(() => BaseContent)
+@Resolver(() => Content)
 export class BaseContentResolver {
   @FieldResolver()
-  createdAt(@Root() content: BaseContent) {
+  createdAt(@Root() content: Content) {
     return new Date(content.createdAt);
   }
 }

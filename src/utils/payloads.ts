@@ -1,4 +1,4 @@
-import { InterfaceType, Field, ObjectType } from 'type-graphql';
+import { InterfaceType, Field, ObjectType, ID } from 'type-graphql';
 import { Challenge } from '../entities/Challenge';
 import {
   LatexContent,
@@ -45,6 +45,9 @@ export class RemoveContentPayload {
 @ObjectType({ implements: BasePayload })
 export class MwpChallenge_PublishPayload {
   message!: string;
+
+  @Field(() => ID)
+  publishedId!: string;
 }
 
 @ObjectType({ implements: BasePayload })
@@ -60,6 +63,7 @@ export class MwpChallenge_CreateWalletPayload implements BasePayload {
   createdWallet!: Wallet;
 }
 
+@ObjectType({ implements: BasePayload })
 export class MwpChallenge_CreateWalletRollbackPayload implements BasePayload {
   message!: string;
 }
@@ -72,6 +76,7 @@ export class MwpChallenge_BoostChallengePayload implements BasePayload {
   challenge!: Challenge;
 }
 
+@ObjectType({ implements: BasePayload })
 export class MwpChallenge_BoostChallengeRollbackPayload implements BasePayload {
   message!: string;
 }
@@ -84,6 +89,7 @@ export class MwpChallenge_MarkChallengeSolvedPayload implements BasePayload {
   challenge!: Challenge;
 }
 
+@ObjectType({ implements: BasePayload })
 export class MwpChallenge_MarkChallengeSolvedRollbackPayload
   implements BasePayload {
   message!: string;

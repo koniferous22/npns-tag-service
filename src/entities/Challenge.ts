@@ -7,7 +7,7 @@ import { Submission } from './Submission';
 import { Tag } from './Tag';
 
 @Directive(`@key(fields: "id")`)
-@ObjectType()
+@ObjectType({ implements: AbstractPost })
 @Entity()
 export class Challenge extends AbstractPost {
   // TODO shard key
