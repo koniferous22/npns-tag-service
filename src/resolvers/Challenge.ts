@@ -102,12 +102,20 @@ export class ChallengeResolver extends ChallengeBaseResolver {
     @Args() args: FindPostArgs,
     @Ctx() ctx: ChallengeServiceContext
   ) {
-    const challenge = await ctx.em
-      .getRepository(Challenge)
-      .findOneOrFail(args.id);
+    const challengeRepo = ctx.em.getRepository(Challenge);
+    const challenge = await challengeRepo.findOneOrFail(args.id);
     if (!challenge.isActive && !challenge.acceptedSubmission) {
       throw new PostNotAvailable(challenge.id);
     }
+    const shouldIncrementView = await ctx.viewCache.viewChallenge(
+      ctx.ip,
+      challenge.id
+    );
+    if (shouldIncrementView) {
+      challenge.views += 1;
+      await ctx.em.getRepository(Challenge).save(challenge);
+    }
+
     return challenge;
   }
   @Query(() => ChallengeConnection)

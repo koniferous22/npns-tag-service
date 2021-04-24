@@ -9,7 +9,7 @@ import { addResolversToSchema } from 'apollo-graphql';
 import gql from 'graphql-tag';
 import { printSchemaWithDirectives } from '@graphql-tools/utils';
 import { buildSchema, createResolversMap } from 'type-graphql';
-import { createConnection } from 'typeorm';
+import { createConnection, ViewColumn } from 'typeorm';
 import { graphqlUploadExpress } from 'graphql-upload';
 import { TagResolver } from './resolvers/Tag';
 import { ChallengeServiceContext } from './context';
@@ -30,6 +30,7 @@ import { ReplyResolver } from './resolvers/Reply';
 import { ReplyEditResolver } from './resolvers/ReplyResolver';
 import { WalletResolver } from './resolvers/Wallet';
 import { resolveTagReference } from './references/Tag';
+import { ViewCacheService } from './external/ChallengeViewCache';
 
 const federationFieldDirectivesFixes: Parameters<
   typeof fixFieldSchemaDirectives
@@ -52,6 +53,7 @@ const bootstrap = async () => {
   const em = connection.createEntityManager();
   const gridFsDb = await gridFsConnectMongodb(content.mongo);
   const gridFileSystem = new GridFS(gridFsDb);
+  const viewCache = new ViewCacheService();
 
   const typeGraphQLSchema = await buildSchema({
     resolvers: [
@@ -104,7 +106,9 @@ const bootstrap = async () => {
         em: connection.createEntityManager(),
         user: userFromRequest ? JSON.parse(userFromRequest) : null,
         config: Config.getInstance(),
-        gridFileSystem
+        ip: req.ip,
+        gridFileSystem,
+        viewCache
       } as ChallengeServiceContext;
     }
   });

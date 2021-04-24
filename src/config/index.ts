@@ -23,6 +23,38 @@ const configWithParser = {
       transform: getEndpoint,
       overridenValue: null as null | string
     },
+    challengeView: {
+      type: 'node' as const,
+      children: {
+        cache: {
+          type: 'node' as const,
+          children: {
+            host: {
+              type: 'leaf' as const,
+              originalValue: process.env.CHALLENGE_VIEW_CACHE_HOST,
+              overridenValue: null as null | string
+            },
+            port: {
+              type: 'leaf' as const,
+              originalValue: process.env.CHALLENGE_VIEW_CACHE_PORT,
+              transform: getNumber,
+              overridenValue: null as null | string
+            },
+            password: {
+              type: 'leaf' as const,
+              originalValue: process.env.CHALLENGE_VIEW_CACHE_PASSWORD,
+              overridenValue: null as null | string
+            }
+          }
+        },
+        expirationTime: {
+          type: 'leaf' as const,
+          originalValue: process.env.CHALLENGE_VIEW_EXPIRATION_TIME,
+          transform: getNumber,
+          overridenValue: null as null | string
+        }
+      }
+    },
     orm: {
       type: 'node' as const,
       children: {

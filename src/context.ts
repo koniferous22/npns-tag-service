@@ -1,5 +1,6 @@
 import { getConnection } from 'typeorm';
 import { Config } from './config';
+import { ViewCacheService } from './external/ChallengeViewCache';
 import { GridFS } from './external/GridFS';
 
 export type ChallengeServiceContext = {
@@ -15,6 +16,8 @@ export type ChallengeServiceContext = {
       hasNsfwAllowed: boolean;
     };
   } | null;
+  ip: string;
   config: Config;
   gridFileSystem: GridFS;
+  viewCache: ViewCacheService;
 };
