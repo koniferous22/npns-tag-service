@@ -1,30 +1,36 @@
 import { plainToClass } from 'class-transformer';
 import {
   Arg,
+  Args,
   Authorized,
   Ctx,
   Directive,
   Field,
+  FieldResolver,
   ID,
   InputType,
   Mutation,
   Query,
   Resolver,
+  Root,
   UseMiddleware
 } from 'type-graphql';
 import { ChallengeServiceContext } from '../context';
 import { Challenge } from '../entities/Challenge';
 import { Submission } from '../entities/Submission';
+import { SubmissionConnection } from '../entities/SubmissionConnection';
 import { Tag } from '../entities/Tag';
 import { Wallet } from '../entities/Wallet';
 import { MultiWriteProxyHmacGuard } from '../middlewares/MultiWriteProxyHmacGuard';
 import {
   NegativeBoostError,
+  PostNotAvailable,
   UnauthorizedContentAccessError,
   UpdatingInactiveChallenge,
   UpdatingSolvedChallenge
 } from '../utils/exceptions';
 import {
+  ConnectionInput,
   MwpChallenge_BoostChallengeInput,
   MwpChallenge_MarkChallengeSolvedInput
 } from '../utils/inputs';
@@ -36,7 +42,10 @@ import {
   MwpChallenge_PublishPayload,
   MwpChallenge_PublishRollbackPayload
 } from '../utils/payloads';
-import { createAbstractPostResolver } from './AbstractPostResolver';
+import {
+  createAbstractPostResolver,
+  FindPostArgs
+} from './AbstractPostResolver';
 import {
   ChallengeConnection,
   ChallengesByTagIdsInput
@@ -75,6 +84,32 @@ export class ChallengeResolver extends ChallengeBaseResolver {
     return post;
   }
 
+  @FieldResolver(() => SubmissionConnection)
+  submissions(
+    @Root() challenge: Challenge,
+    @Arg('input') input: ConnectionInput,
+    @Ctx() ctx: ChallengeServiceContext
+  ) {
+    return SubmissionConnection.connection(input, ctx, {
+      challenge
+    });
+  }
+
+  @Query(() => Challenge, {
+    name: `challengeById`
+  })
+  async findById(
+    @Args() args: FindPostArgs,
+    @Ctx() ctx: ChallengeServiceContext
+  ) {
+    const challenge = await ctx.em
+      .getRepository(Challenge)
+      .findOneOrFail(args.id);
+    if (!challenge.isActive && !challenge.acceptedSubmission) {
+      throw new PostNotAvailable(challenge.id);
+    }
+    return challenge;
+  }
   @Query(() => ChallengeConnection)
   async challengesByTagIds(
     @Arg('input') input: ChallengesByTagIdsInput,

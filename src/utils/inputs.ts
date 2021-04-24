@@ -1,4 +1,5 @@
-import { Field, ID, InputType } from 'type-graphql';
+import { IsPositive } from 'class-validator';
+import { Field, ID, InputType, Int } from 'type-graphql';
 
 @InputType()
 export class MwpChallenge_CreateWalletInput {
@@ -28,4 +29,21 @@ export class MwpChallenge_MarkChallengeSolvedInput {
 
   @Field(() => ID)
   winnerWalletId!: string;
+}
+
+@InputType()
+export class ConnectionInput {
+  @Field(() => Int)
+  @IsPositive()
+  first!: number;
+
+  @Field({
+    nullable: true
+  })
+  date?: Date;
+
+  @Field(() => ID, {
+    nullable: true
+  })
+  id?: string;
 }

@@ -161,3 +161,10 @@ export class UpdatingInactiveChallenge extends Error {
     super(`Attempting to update inactive challenge "${challengeId}"`);
   }
 }
+
+export class PostNotAvailable extends Error {
+  name = 'PostNotAvailable';
+  constructor(public postId: string) {
+    super(`Post ${postId} not published yet`);
+  }
+}

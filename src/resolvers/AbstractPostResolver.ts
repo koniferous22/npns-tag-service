@@ -29,6 +29,7 @@ import { getMaxUploads } from '../utils/contentLimits';
 import {
   ContentRefNotFound,
   MaxContentPiecesExceededError,
+  PostNotAvailable,
   UnauthorizedContentAccessError
 } from '../utils/exceptions';
 import {
@@ -40,6 +41,13 @@ import {
   RemoveContentPayload
 } from '../utils/payloads';
 import { MultiWriteProxyHmacGuard } from '../middlewares/MultiWriteProxyHmacGuard';
+import { upperCamelCaseToLowerCamelCase } from '../utils/upperCamelCaseToLowerCamelCase';
+
+@ArgsType()
+export class FindPostArgs {
+  @Field(() => ID)
+  id!: string;
+}
 
 export function createAbstractPostResolver<PostT extends AbstractPost>(
   entityName: string,
@@ -84,12 +92,6 @@ export function createAbstractPostResolver<PostT extends AbstractPost>(
     @Field(() => ID)
     contentId!: string;
   }
-  @ArgsType()
-  class FindPostArgs {
-    @Field(() => ID)
-    id!: string;
-  }
-
   @Resolver({ isAbstract: true })
   abstract class AbstractPostResolver {
     abstract post(
@@ -121,10 +123,17 @@ export function createAbstractPostResolver<PostT extends AbstractPost>(
     }
 
     @Query(() => entityClass, {
-      name: `${entityName.toLowerCase()}ById`
+      name: `${upperCamelCaseToLowerCamelCase(entityName)}ById`
     })
-    findById(@Args() args: FindPostArgs, @Ctx() ctx: ChallengeServiceContext) {
-      return this.getRecord(args.id, ctx);
+    async findById(
+      @Args() args: FindPostArgs,
+      @Ctx() ctx: ChallengeServiceContext
+    ) {
+      const post = await this.getRecord(args.id, ctx);
+      if (!post.isActive) {
+        throw new PostNotAvailable(post.id);
+      }
+      return post;
     }
 
     @Authorized()

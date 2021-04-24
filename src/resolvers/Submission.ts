@@ -1,8 +1,19 @@
-import { Authorized, Mutation, Arg, ID, Ctx, Resolver } from 'type-graphql';
+import {
+  Authorized,
+  Mutation,
+  Arg,
+  ID,
+  Ctx,
+  Resolver,
+  FieldResolver,
+  Root
+} from 'type-graphql';
 import { ChallengeServiceContext } from '../context';
 import { Challenge } from '../entities/Challenge';
+import { ReplyConnection } from '../entities/ReplyConnection';
 import { Submission } from '../entities/Submission';
 import { SubmittingOnOwnChallenge } from '../utils/exceptions';
+import { ConnectionInput } from '../utils/inputs';
 import { createAbstractPostResolver } from './AbstractPostResolver';
 
 const SubmissionBaseResolver = createAbstractPostResolver(
@@ -12,6 +23,16 @@ const SubmissionBaseResolver = createAbstractPostResolver(
 
 @Resolver(() => Submission)
 export class SubmissionResolver extends SubmissionBaseResolver {
+  @FieldResolver(() => ReplyConnection)
+  replies(
+    @Root() submission: Submission,
+    @Arg('input') input: ConnectionInput,
+    @Ctx() ctx: ChallengeServiceContext
+  ) {
+    return ReplyConnection.connection(input, ctx, {
+      submission
+    });
+  }
   @Authorized()
   @Mutation(() => Submission, {
     name: 'postSubmission'

@@ -115,7 +115,8 @@ export class ChallengeConnection {
           ...(input.afterCursorId
             ? { id: MoreThan(input.afterCursorId) }
             : undefined),
-          tag: In(input.tags)
+          tag: In(input.tags),
+          isActive: true
         },
         take: input.first,
         order: {
@@ -135,7 +136,8 @@ export class ChallengeConnection {
           ...(input.afterCursorId
             ? { id: MoreThan(input.afterCursorId) }
             : undefined),
-          tag: In(input.tags)
+          tag: In(input.tags),
+          isActive: true
         },
         take: input.shouldPrioritizeBoostedChallenges
           ? input.first - prioritizedChallenges.length
@@ -160,18 +162,21 @@ export class ChallengeConnection {
                     {
                       boost: Between(0, lastElem.boost),
                       id: MoreThan(lastElem.id),
-                      tag: In(input.tags)
+                      tag: In(input.tags),
+                      isActive: true
                     },
                     {
                       boost: 0,
-                      tag: In(input.tags)
+                      tag: In(input.tags),
+                      isActive: true
                     }
                   ]
                 }
               : {
                   where: {
                     boost: 0,
-                    tag: In(input.tags)
+                    tag: In(input.tags),
+                    isActive: true
                   }
                 }
           )) > 0;
@@ -181,7 +186,8 @@ export class ChallengeConnection {
             where: {
               views: LessThanOrEqual(lastElem.views),
               id: MoreThan(lastElem.id),
-              tag: In(input.tags)
+              tag: In(input.tags),
+              isActive: true
             }
           })) > 0;
         hasNextPageBoostedResults = null;

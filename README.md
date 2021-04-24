@@ -16,3 +16,5 @@ Challenge service for npns
 * Content owner decorator
 * Find better workaround for reference resolving
 * Design better challenge lifecycle, shouldn't be determined by single boolean `isActive`
+* Document Mwp transactions with directives
+  * Not possible atm, bc apollo/federation, doesn't have config parameter for custom directives :(

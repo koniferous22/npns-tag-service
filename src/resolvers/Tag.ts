@@ -52,7 +52,7 @@ export class TagResolver {
   @Query(() => [Tag])
   async tags(
     @Ctx() ctx: ChallengeServiceContext,
-    @Arg('root', { nullable: true }) root?: string
+    @Arg('root', () => ID, { nullable: true }) root?: string
   ): Promise<Tag[]> {
     const tagRepo = ctx.em.getTreeRepository(Tag);
     if (!root) {

@@ -51,7 +51,6 @@ export class Challenge extends AbstractPost {
     lazy: true,
     cascade: true
   })
-  @Field(() => Submission)
   submissions!: Submission[];
 
   @OneToMany(() => ChallengeEdit, (edit) => edit.challenge, {
