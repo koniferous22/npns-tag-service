@@ -9,7 +9,7 @@ import { addResolversToSchema } from 'apollo-graphql';
 import gql from 'graphql-tag';
 import { printSchemaWithDirectives } from '@graphql-tools/utils';
 import { buildSchema, createResolversMap } from 'type-graphql';
-import { createConnection, ViewColumn } from 'typeorm';
+import { createConnection } from 'typeorm';
 import { graphqlUploadExpress } from 'graphql-upload';
 import { TagResolver } from './resolvers/Tag';
 import { ChallengeServiceContext } from './context';
